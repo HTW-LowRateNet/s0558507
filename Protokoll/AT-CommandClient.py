@@ -4,7 +4,7 @@ import time
 from _thread import start_new_thread
 
 ser = serial.Serial (port = "/dev/ttyS0")#Open named port)
-ser.timeout = 0.1
+ser.timeout = 0.3
 ser.baudrate = 115200     
 
 if(not ser.isOpen()):
