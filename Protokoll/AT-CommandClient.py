@@ -8,8 +8,8 @@ ser = serial.Serial (port = "/dev/ttyS0")#Open named port)
 ser.timeout = 0.3
 ser.baudrate = 115200
 
-#RoutingTabelle {<String>,<String,Int>}
-routingTable = {"0000":{"":1}}
+#Koordinator Semaphore
+IAMCAPTAIN = false
 
 if(not ser.isOpen()):
     ser.open()
@@ -17,7 +17,10 @@ if(not ser.isOpen()):
 sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
 print("Initializing the device ..")
 
+
 '''
+MessageCodes aus der Präsi --- dient als Anhalt
+
 KDIS = Koordinator Discovery
 ADDR = Koordinator Sendet einem Client eine feste Adresse
 MSSG = einfache Nachricht
@@ -26,20 +29,29 @@ DISC = Entdeckung von allen Nachbarn
 ALIV = Anfrage, ob ein Knoten noch in der Nähe ist (Eigentlich durch DISC abgedeckt)
 '''
 
+'''
+#RoutingTabelle {<String>,<String,Int>}
+routingTable = {"0000":{"":1}}
+'''
 
+'''
 #NeighboorDiscovery
 def neighboorDiscovery():
     pass
+'''
 
-
+'''
 def incrementHex(valhex):
     return str(valhex+1)
     #return hex(valhex+1)
+'''
 
-def checkKoordinator():
+def checkKoordinator(line):
     #koordinator hat 0000
+    if ",0000," in line:
+        return true
+    else return false
     
-    pass
 
 
 #CommandSend Method
@@ -51,7 +63,7 @@ def sendCommand(command):
 #InitialConfig methode
 def initalConfig():
     rstAT = "AT+RST"
-    setAddrAT= "AT+ADDR=00FF"
+    setAddrAT= "AT+ADDR=FFFF"
     getAddrAT= "AT+ADDR?"
     getDestAT= "AT+DEST?"
     cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
@@ -67,6 +79,11 @@ def readSerialLine():
     while 1:
         read = sio.readline()       
         if read != "":
+            check = checkKoordinator(read)
+            if check:
+                continue
+            else
+                IAMCAPTAIN = true
             print(read)
 
 #ReadLineThread
