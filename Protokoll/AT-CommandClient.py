@@ -22,10 +22,11 @@ def initalConfig():
     rstAT = "AT+RST"
     setAddrAT= "AT+ADDR=2020"
     getAddrAT= "AT+ADDR?"
-    cfgAT = "AT+CFG=433000000,20,6,12,1,1,0,0,0,0,3000,8,4"
+    getDestAT= "AT+DEST?"
+    cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
     rxAT = "AT+RX"
     saveAT = "AT+SAVE"
-    commands = ([cfgAT, setAddrAT, getAddrAT, saveAT, rxAT])
+    commands = ([cfgAT, setAddrAT, getAddrAT, saveAT, getDestAT, rxAT])
     for i in commands:
         print(i)
         sendCommand(i)
@@ -37,6 +38,7 @@ def readSerialLine():
             print(read)
 
 start_new_thread(readSerialLine,())
+
 initalConfig()
 while 1:
     input_val = input("> ")
