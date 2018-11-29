@@ -4,19 +4,37 @@ import time
 from _thread import start_new_thread
 
 #serial connection
-ser = serial.Serial (port = "/dev/ttyS0")#Open named port)
+#ser = serial.Serial (port = "/dev/ttyS0")#Open named port)
+ser = serial.Serial (port = "/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.3
 ser.baudrate = 115200
 
 #Koordinator Semaphore
-IAMCAPTAIN = false
+#IAMCAPTAIN = false
 
 if(not ser.isOpen()):
     ser.open()
 
 sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
-print("Initializing the device ..")
+read = ""
+state =""
+message = []
+knownaddr = []
+ownaddr = ""
 
+
+
+messageCodes = [
+    ('ALIV', 1 ),
+    ('KDIS', 2),
+    ('ADDR', 3),
+    ('POLL', 4),
+]
+messageCodes.sort() # Sorts the list in-place
+
+
+
+print("Initializing the device ..")
 
 '''
 MessageCodes aus der Präsi --- dient als Anhalt
@@ -46,13 +64,22 @@ def incrementHex(valhex):
     #return hex(valhex+1)
 '''
 
+def makeKoordinator():
+    pass
+
+def checkMessage(message):
+    global messageCodes
+    try:
+        return next(x for x in messageCodes if message[3] in x)
+    except StopIteration:
+        raise ValueError("No matching record found")
+
 def checkKoordinator(line):
     #koordinator hat 0000
-    if ",0000," in line:
-        return true
-    else return false
-    
-
+    if message[1] == "0000":
+        return 1
+    else:
+        return -1
 
 #CommandSend Method
 def sendCommand(command):
@@ -76,14 +103,23 @@ def initalConfig():
 
 #ReadLine Funktion
 def readSerialLine():
+    
+    global read
+    global state
+    global message
+    global knownaddr
+    global ownaddr
+
+
     while 1:
         read = sio.readline()       
         if read != "":
-            check = checkKoordinator(read)
-            if check:
-                continue
-            else
-                IAMCAPTAIN = true
+            message = read.split(',')
+            check = checkKoordinator(message)
+            check2 = checkMessage(message)
+            print("MessageCODE = "+check2)
+            print(check)
+            print(message)
             print(read)
 
 #ReadLineThread
