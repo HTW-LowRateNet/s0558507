@@ -1,6 +1,8 @@
 import serial
 import io
 import time
+
+import mods.message_check_method as checker
 from _thread import start_new_thread
 
 #serial connection
@@ -23,46 +25,23 @@ knownaddr = []
 ownaddr = ""
 
 
+print("Initializing the device ..")
+
+
+'''
+###
+Outsourced
+###
 
 messageCodes = [
     ('ALIV', 1 ),
     ('KDIS', 2),
-    ('ADDR', 3),
+    ('ADDR', projectLoRa),
     ('POLL', 4),
 ]
 messageCodes.sort() # Sorts the list in-place
 
 
-
-print("Initializing the device ..")
-
-'''
-MessageCodes aus der Praesi --- dient als Anhalt
-
-KDIS = Koordinator Discovery
-ADDR = Koordinator Sendet einem Client eine feste Adresse
-MSSG = einfache Nachricht
-POLL = Selbstanfrage zur Sicherstellung der eindeutigen Adresse
-DISC = Entdeckung von allen Nachbarn
-ALIV = Anfrage, ob ein Knoten noch in der Naehe ist (Eigentlich durch DISC abgedeckt)
-'''
-
-'''
-#RoutingTabelle {<String>,<String,Int>}
-routingTable = {"0000":{"":1}}
-'''
-
-'''
-#NeighboorDiscovery
-def neighboorDiscovery():
-    pass
-'''
-
-'''
-def incrementHex(valhex):
-    return str(valhex+1)
-    #return hex(valhex+1)
-'''
 
 def makeKoordinator():
     pass
@@ -70,7 +49,7 @@ def makeKoordinator():
 def checkMessage(message):
     global messageCodes
     try:
-        return next(x for x in messageCodes if message[3] in x)
+        return next(x for x in messageCodes if message[projectLoRa] in x)
     except StopIteration:
         raise ValueError("No matching record found")
 
@@ -80,6 +59,8 @@ def checkKoordinator(line):
         return 1
     else:
         return -1
+
+'''
 
 #CommandSend Method
 def sendCommand(command):
@@ -96,7 +77,7 @@ def initalConfig():
     cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
     rxAT = "AT+RX"
     saveAT = "AT+SAVE"
-    commands = ([cfgAT, setAddrAT, getAddrAT, saveAT, getDestAT, rxAT])
+    commands = ([rstAT, cfgAT, setAddrAT, getAddrAT, saveAT, getDestAT, rxAT])
     for i in commands:
         print(i)
         sendCommand(i)
@@ -115,8 +96,8 @@ def readSerialLine():
         read = sio.readline()       
         if read != "":
             message = read.split(',')
-            check = checkKoordinator(message)
-            check2 = checkMessage(message)
+            check = checker.checkKoordinator(message)
+            check2 = checker.checkMessage(message)
             print("MessageCODE = "+check2)
             print(check)
             print(message)
@@ -129,7 +110,7 @@ start_new_thread(readSerialLine,())
 initalConfig()
 
 
-#Main Loop ueberarbeiten da ich ja jetzt SendCommand besitze
+#Main Loop
 while 1:
     input_val = input("> ")
     if input_val == 'exit':

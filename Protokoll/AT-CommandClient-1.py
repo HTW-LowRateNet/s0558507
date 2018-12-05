@@ -5,7 +5,7 @@ from _thread import start_new_thread
 
 #serial connection
 #ser = serial.Serial (port = "/dev/ttyS0")#Open named port)
-ser = serial.Serial (port = "/dev/ttyUSB0")#Open named port)
+ser = serial.Serial (port = "/dev/ttyUSB1")#Open named port)
 ser.timeout = 0.3
 ser.baudrate = 115200
 
