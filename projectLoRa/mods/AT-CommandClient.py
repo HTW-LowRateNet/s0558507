@@ -2,7 +2,7 @@ import serial
 import io
 import time
 from _thread import start_new_thread
-
+import Message
 
 
 #serial connection
@@ -19,12 +19,13 @@ if(not ser.isOpen()):
 
 sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
 read = ""
-state =""
+
+koordinator = False
+
 message = []
 knownaddr = []
 ownaddr = ""
-
-
+message
 
 messageCodes = [
     ('ALIV', 1 ),
@@ -71,7 +72,7 @@ def makeKoordinator():
 
 def checkMessage(message):
     global messageCodes
-    return 1
+    return message.type
     '''
     try:
         return next(x for x in messageCodes if message[3] in x)
@@ -79,11 +80,14 @@ def checkMessage(message):
         raise ValueError("No matching record found")
     '''
     
-def checkKoordinator(line):
+def checkKoordinator(message):
     #koordinator hat 0000
-    if message[1] == "0000":
+    global koordinator
+    if message.srcAddr == "0000":
+        koordinator = False
         return 1
     else:
+        koordinator = True
         return -1
 
 #CommandSend Method
@@ -95,7 +99,8 @@ def sendCommand(command):
 #InitialConfig methode
 def initalConfig():
     rstAT = "AT+RST"
-    setAddrAT= "AT+ADDR=FFFF"
+    setAddrAT= "AT+ADDR=0199"
+    ownaddr = "0199"
     getAddrAT= "AT+ADDR?"
     getDestAT= "AT+DEST?"
     cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
@@ -120,19 +125,32 @@ def readSerialLine():
         read = sio.readline()       
         if read != "":
             message = read.split(',')
-            check = checkKoordinator(message)
-            check2 = checkMessage(message)
+            #['LR', '0000', '15', 'ALIV', '0', '5', '0', '0000', 'FFFF', '\n']
+            #[1:BLA, 2:ADDRESSE STANDARD, 3:LAENGE, 4:TYPE, 5:ID, 6:TTL ,7:HOPS, 8:SRC ,9:DST, 10:MSG ]
+            #  type, mID, ttl, hops, srcAddr, dstAddr, msg
+            if len(message) > 9:
+                messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
+                check = checkKoordinator(messageObj)
+                check2 = checkMessage(messageObj)
+                print(check)
             #print("MessageCODE = "+check2)
-            print(check)
+            
             print(message)
             print(read)
 
+#InitialConfig to configure the LoRa Modul
+initalConfig()
 #ReadLineThread
 start_new_thread(readSerialLine,())
 
-#InitialConfig to configure the LoRa Modul
-initalConfig()
+def send_message(sio):
+    #global ownaddr
+    new_message = Message.Message("MMSG","0","5","0","0199","FFFF","Hallo!!")
+    new_message.send(sio)
+    time.sleep(1)
 
+#ReadLineThread
+start_new_thread(send_message(sio),())
 
 #Main Loop ueberarbeiten da ich ja jetzt SendCommand besitze
 while 1:

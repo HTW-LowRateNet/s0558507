@@ -69,11 +69,14 @@ def makeKoordinator():
 
 def checkMessage(message):
     global messageCodes
+    return 1
+    '''
     try:
         return next(x for x in messageCodes if message[3] in x)
     except StopIteration:
         raise ValueError("No matching record found")
-
+    '''
+    
 def checkKoordinator(line):
     #koordinator hat 0000
     if message[1] == "0000":
@@ -117,7 +120,7 @@ def readSerialLine():
             message = read.split(',')
             check = checkKoordinator(message)
             check2 = checkMessage(message)
-            print("MessageCODE = "+check2)
+            #print("MessageCODE = "+check2)
             print(check)
             print(message)
             print(read)
