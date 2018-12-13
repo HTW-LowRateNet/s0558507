@@ -34,12 +34,12 @@ class Message:
 '''
 class Message:
     rn = "\r\n"
-    def __init__(self,type,msgID,ttl,hops,ownAddr,destAddr,msg):
+    def __init__(self,type,msgID,ttl,hops,srcAddr,destAddr,msg):
         self.type = type
         self.msgID = msgID
         self.ttl = ttl
         self.hops = hops
-        self.ownAddr = ownAddr
+        self.srcAddr = srcAddr
         self.destAddr = destAddr
         self.msg = msg
         
@@ -50,7 +50,7 @@ class Message:
         return size
            
     def getMessage(self):
-        string = self.type+","+self.msgID+","+self.ttl+","+self.hops+","+self.ownAddr+","+self.destAddr+","+self.msg+","
+        string = self.type+","+self.msgID+","+self.ttl+","+self.hops+","+self.srcAddr+","+self.destAddr+","+self.msg+","
         return string
     
     def send(self,sio,dest):

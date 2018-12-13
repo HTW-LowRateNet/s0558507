@@ -13,16 +13,38 @@ class Client:
         self.sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
         self.cdis = 0 #is a counter for cdis message
         self.addressCounter = 256 #is a counter for the adress generator this is an integer
+        self.messageSet = {}
+        self.coordinatorAliv = False
+        
         
     def config(self):
         self.state = "NEW"
         print("initial config..")
+        rstAT = "AT+RST"
+        rxAT = "AT+RX"
+        saveAT = "AT+SAVE"
+        
         self.sio.write('AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4\r\n')
         self.sio.flush()
         time.sleep(1)
+        
         self.setAddr()
- 
-    
+        
+        self.sio.write('AT+SAVE\r\n')
+        self.sio.flush()
+        time.sleep(1)
+        #self.sio.write('AT+RST\r\n')
+        #self.sio.flush()
+        #time.sleep(1)
+        self.sio.write('AT+RX\r\n')
+        self.sio.flush()
+        time.sleep(1)
+  
+    def setAddrModul(self,addr):
+        self.addr =addr
+        self.sio.write('AT+ADDR='+self.addr+'\r\n')
+        self.sio.flush()
+        
     def setAddr(self):
         tempAddr = ""
         if self.state == "NEW":
@@ -47,41 +69,53 @@ class Client:
     #PayLoad are only by request on the CoordinatorDiscovery ADDR or CDIS?!?!?
     #eventually the while must be droped
     def sendAlive(self):
-        while self.state == "COOR":
-            message = m.Message("ALIV","0","0","0",self.addr,"ffff","I am the captian!")
-            message.send(self.sio,"ffff")
-            print(message.messageSize())
+        #while self.state == "COOR":
+        message = m.Message("ALIV","0","0","0",self.addr,"FFFF","I am the captian!")
+        message.send(self.sio,"FFFF")
+        print("Message -> "+message.getMessage())    
             
     def sendNeighboorDisc(self):
-        while self.state == "CL":
-            message = m.Message("DISC","0","1","0",self.addr,"ffff","where are my bro's!")
-            message.send(self.sio,"ffff")
-            print(message.messageSize())
+        #while self.state == "CL":
+        message = m.Message("DISC","0","1","0",self.addr,"FFFF","where are my bro's!")
+        message.send(self.sio,"FFFF")
+        print("Message -> "+message.getMessage())    
             
     def sendCoordinatorDisc(self):
-        while self.state == "NEW":
-            message = m.Message("CDIS","0","10","0",self.addr,"0000","where are my captain!")
-            message.send(self.sio,"ffff")
-            print(message.messageSize())   
-    
+        #while self.state == "NEW":
+        message = m.Message("CDIS","0","10","0",self.addr,"FFFF","where are my captain!")
+        message.send(self.sio,"FFFF")
+        print("Message -> "+message.getMessage())
+            
     def sendAddrRequest(self):
-        while self.state == "NEW":
-            message = m.Message("ADDR","0","10","0",self.addr,"0000","captain give me a job!")
-            message.send(self.sio,"ffff")
-            print(message.messageSize())
+        #while self.state == "NEW":
+        message = m.Message("ADDR","0","10","0",self.addr,"0000","captain give me a job!")
+        message.send(self.sio,"FFFF")
+        print("Message -> "+message.getMessage())
+        
+    def sendAddrAckknowledge(self):
+        #while self.state == "NEW":
+        message = m.Message("AACK","0","10","0",self.addr,"0000","captain give me a job!")
+        message.send(self.sio,"FFFF")
+        print("Message -> "+message.getMessage()) 
     
     #this message is the only one of controlmessages that recieve an payload 
-    def sendAddrResponse(self):
-        while self.state == "COOR":
-            newAdress = str(self.generateNewAddress())
-            newAdress.replace("0x","",1)#0x0000 0x was cut for a better use
-            message = m.Message("ADDR","1","10","0",self.addr,"0000",newAdress)
-            message.send(self.sio,"ffff")
-            print(message.messageSize())
-            
-                
-            
-              
+    def sendAddrResponse(self,requestAddress):
+        #while self.state == "COOR":
+        newAdress = str(self.generateNewAddress())
+        newAdress.replace("0x","",1)#0x0000 0x was cut for a better use
+        message = m.Message("ADDR","1","10","0",self.addr,requestAddress,newAdress)
+        message.send(self.sio,requestAddress)
+        print("Message -> "+message.getMessage())    
+    
+    def sendALIVForward(self,sio,forwardAlivMessage):
+        forwardAlivMessage.hops = forwardAliv.hops + 1
+        if(forwardAlivMessage.ttl < 1):
+            return
+        else:
+            forwardAlivMessage.ttl = forwardAliv.ttl - 1
+            forwardAlivMessage.send(self.sio,"FFFF")
+        pass
+    
     #need to run an dummy 
     def adrDiscovery(self, message,i):
         print("Address Discovery..")
@@ -102,10 +136,16 @@ class Client:
            # coordinatorSendNotify()
         time.sleep(1)
         
-        
+    #CommandSend Method
+    def sendCommand(command):
+        sio.write(command + '\r\n')
+        sio.flush()
+        sio.readline()
+    
     def generateNewAddress():
         addressCounter + 1
         newAddress = hex(addressCounter)
         return newAddress
         
+    
     

@@ -18,7 +18,10 @@ if(not ser.isOpen()):
     ser.open()
 
 sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
+
 client = client.Client("NEW",ser,"",[])
+
+client.config()
 
 
 
@@ -31,48 +34,120 @@ def readSerialLine():
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
+                time.sleep(1)
                 message = tempMessage
                 messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(messageObj)
                 #checkForAction(messageObj)
-
+                
+                client.cdis = client.cdis + 1
+                #if client.cdis < 4 and client.coordinatorAliv == False:
+                
+                client.sendCoordinatorDisc()
 
 def checkMessageType(message):
+    ####################
+    ####    HANDLE MESSAGE TYPE ALIV
+    ###################
     if message.type == "ALIV":
         print("TRUE ALIV MESSAGE")
-        if(client.state == "KOOR"):
+        # two coordinatorers
+        if(client.state == "COOR"):
             client.state = "NEW"
+            client.coordinatorAliv = True
+            client.cdis = 0
             print(client.state)
-            pass
-        if(client.state == "NEW"):
-            client.state = "CL"
-            print(client.state)
-            pass
-        if(client.state == "CL"):
-            client.state = "CL"
-            print(client.state)
-            pass
-    if message.type == "CDIS":
-        client.sendAlive()
-        pass
-    if message.type == "ADDR":
+            return
         
-        pass
-    if message.type == "ALIV":
-        pass
-    #Client state change to CL and dicoverA Address
-    pass
-
-def runningDevice():
-    if(client.state == "KOOR"):
-        client.sendAlive
+        if(client.state == "NEW"):
+            client.coordinatorAliv = True
+            client.state = "CL"
+            client.cdis = 0
+            print(client.state)
+            return
+        if(client.state == "CL"):
+            client.coordinatorAliv = True
+            client.state = "CL"
+            client.cdis = 0
+            print(client.state)
+            return
+            
+    ####################
+    ####    HANDLE MESSAGE TYPE ADDR
+    ###################
+    if message.type == "ADDR":
+        print("ADDR REQUEST OR RESPONSE MESSAGE")
+        if(client.state == "COOR"):
+            print("Clientstate:"+client.state)
+            #save the new adress and send it to the client
+            client.sendAddrResponse(message.srcAddr)
+            return
+        if(client.state == "NEW"):
+            print("Clientstate:"+client.state)
+            #######  ignore   #########
+            ####### FORWARDING!!!!
+            #### SET NACHRICHTEN UND WEITERLEITEN
+            
+            #send ACK and set state to CL and set Addr
+            #ACK lauft nicht ueber ADDR!!!
+            #if(message.msgID==1):
+                #client.setAddrModul(message.msg)
+            #else
+                
+                #pass
+            return
+        if(client.state == "CL"):
+            #ignore
+            print("Clientstate:"+client.state)
+            return
+        
+    ####################
+    ####    HANDLE MESSAGE TYPE ADDR
+    ###################
+    if message.type == "AACK":
+        print("ADDR REQUEST OR RESPONSE MESSAGE")
+        if(client.state == "COOR"):
+            print("Clientstate:"+client.state)
+            #save the new adress and send it to the client
+            client.sendAddrResponse(message.srcAddr)
+            return
+        if(client.state == "NEW"):
+            print("Clientstate:"+client.state)
+            #######  ignore   #########
+            ####### FORWARDING!!!!
+            #### SET NACHRICHTEN UND WEITERLEITEN
+            
+            #send ACK and set state to CL and set Addr
+            #ACK lauft nicht ueber ADDR!!!
+            #if(message.msgID==1):
+                #client.setAddrModul(message.msg)
+            #else
+                
+                #pass
+            return
     
-    pass
-
-
-
+    
+    ####################
+    ####    HANDLE MESSAGE TYPE CDIS
+    ###################
+    if message.type == "CDIS":
+        print("CDIS REQUEST MESSAGE")
+        if(client.state == "COOR"):
+            print("Clientstate:"+client.state)
+            client.sendAlive()
+            #save the new adress and send it to the client
+            return
+        if(client.state == "NEW"):
+            print("Clientstate:"+client.state)
+            #ignore
+            return
+        if(client.state == "CL"):
+            #ignore
+            return
+  
 start_new_thread(readSerialLine,())
-start_new_thread(runningDevice,())
+
+#start_new_thread(runningDevice,())
 
 #keyboard input
 while 1:          
