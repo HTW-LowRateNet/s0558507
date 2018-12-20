@@ -38,38 +38,44 @@ def readSerialLine():
                 message = tempMessage
                 messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(messageObj)
-                #checkForAction(messageObj)
+                checkForAction(messageObj)
+                if(client.coordinatorAliv == False and (client.state == "NEW" or client.state == "CL")):
+                    client.cdis = client.cdis + 1
+                    #if client.cdis < 4 and client.coordinatorAliv == False:
+                    client.sendCoordinatorDisc()        
                 
-                client.cdis = client.cdis + 1
-                #if client.cdis < 4 and client.coordinatorAliv == False:
                 
-                client.sendCoordinatorDisc()
+def checkForAction(message):
+    pass
+
 
 def checkMessageType(message):
     ####################
     ####    HANDLE MESSAGE TYPE ALIV
     ###################
     if message.type == "ALIV":
-        print("TRUE ALIV MESSAGE")
-        # two coordinatorers
+        print("i have recieve a TRUE ALIV MESSAGE!!")
+        # two coordinatorers eventually split action from check message to action use semaphores
         if(client.state == "COOR"):
             client.state = "NEW"
             client.coordinatorAliv = True
             client.cdis = 0
-            print(client.state)
+            print("MyState is actually = "+client.state)
             return
-        
+        ### TOO MUCH
         if(client.state == "NEW"):
             client.coordinatorAliv = True
-            client.state = "CL"
+            client.state = "NEW"
             client.cdis = 0
-            print(client.state)
+            ### SEND CDIS !!!!!
+            client.sendAddrRequest()
+            print("MyState is actually = "+client.state)
             return
         if(client.state == "CL"):
             client.coordinatorAliv = True
             client.state = "CL"
             client.cdis = 0
-            print(client.state)
+            print("MyState is actually = "+client.state)
             return
             
     ####################
@@ -78,12 +84,21 @@ def checkMessageType(message):
     if message.type == "ADDR":
         print("ADDR REQUEST OR RESPONSE MESSAGE")
         if(client.state == "COOR"):
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
             #save the new adress and send it to the client
             client.sendAddrResponse(message.srcAddr)
+            #is a point for AACK
+            #client.coordinatorAddrCounter = client.coordinatorAddrStore + 1
+            #client.coordinatorAddrStore.append(client.coordinatorAddrCounter)
             return
-        if(client.state == "NEW"):
-            print("Clientstate:"+client.state)
+        if(client.state == "NEW" and message.destAddr == client.addr):
+            print("MyState is actually = "+client.state)
+            print("I will set me a new Address from "+client.addr+" to "+message+msg)
+            client.setAddrModul(message.msg)
+            client.sendAddrAckknowledge()
+            client.state = "CL"
+            print("MyState is actually = "+client.state)
+            print("MY NEW ADDR = "+client.addr)
             #######  ignore   #########
             ####### FORWARDING!!!!
             #### SET NACHRICHTEN UND WEITERLEITEN
@@ -98,25 +113,30 @@ def checkMessageType(message):
             return
         if(client.state == "CL"):
             #ignore
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
             return
         
     ####################
     ####    HANDLE MESSAGE TYPE ADDR
     ###################
     if message.type == "AACK":
-        print("ADDR REQUEST OR RESPONSE MESSAGE")
+        print("ADDR REQUEST ACKNOWLEDGE")
         if(client.state == "COOR"):
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
             #save the new adress and send it to the client
-            client.sendAddrResponse(message.srcAddr)
+            client.coordinatorAddrCounter = client.coordinatorAddrStore + 1
+            client.coordinatorAddrStore.append(message.srcAddr)
+            #client.sendAddrResponse(message.srcAddr)
             return
         if(client.state == "NEW"):
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
             #######  ignore   #########
             ####### FORWARDING!!!!
             #### SET NACHRICHTEN UND WEITERLEITEN
-            
+        if(client.state == "CL"):
+            client.sendForwardMessage(sio, message)
+               
+                
             #send ACK and set state to CL and set Addr
             #ACK lauft nicht ueber ADDR!!!
             #if(message.msgID==1):
@@ -133,15 +153,33 @@ def checkMessageType(message):
     if message.type == "CDIS":
         print("CDIS REQUEST MESSAGE")
         if(client.state == "COOR"):
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
             client.sendAlive()
             #save the new adress and send it to the client
             return
         if(client.state == "NEW"):
-            print("Clientstate:"+client.state)
+            print("MyState is actually = "+client.state)
+            #######  ignore   #########
+            ####### FORWARDING!!!!
+            #### SET NACHRICHTEN UND WEITERLEITEN
+            
+            #send ACK and set state to CL and set Addr
+            #ACK lauft nicht ueber ADDR!!!
+            #if(message.msgID==1):
+                #client.setAddrModul(message.msg)
+            #else
             #ignore
             return
         if(client.state == "CL"):
+            #######  ignore   #########
+            ####### FORWARDING!!!!
+            #### SET NACHRICHTEN UND WEITERLEITEN
+            
+            #send ACK and set state to CL and set Addr
+            #ACK lauft nicht ueber ADDR!!!
+            #if(message.msgID==1):
+                #client.setAddrModul(message.msg)
+            #else
             #ignore
             return
   
