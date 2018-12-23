@@ -23,36 +23,35 @@ class Client:
         #coordinatorAddrStore.append(256)
         self.coordinatorAliv = False
         
+        self.configured = False
+        
         
     def config(self):
+        self.configured = False
         self.state = "NEW"
         print("initial config..")
+        self.sio.write('AT+RST\r\n')
+        self.sio.flush()
+        time.sleep(0.500)
         rstAT = "AT+RST"
         rxAT = "AT+RX"
         saveAT = "AT+SAVE"
         saveDST = "AT+DEST=FFFF"
-        
         self.sio.write('AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4\r\n')
         self.sio.flush()
-        time.sleep(1)
-        
+        time.sleep(0.500)
         self.setAddr()
-        
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        time.sleep(1)
-        
-        #self.sio.write('AT+RST\r\n')
-        #self.sio.flush()
-        #time.sleep(1)
-        
+        time.sleep(0.500)
         self.sio.write('AT+RX\r\n')
         self.sio.flush()
-        time.sleep(1)
-        
+        time.sleep(0.500)
         self.sio.write('AT+DEST=FFFF\r\n')
         self.sio.flush()
-        time.sleep(1) 
+        time.sleep(0.500)
+        self.configured = True
+        self.cdis = 0
   
     def setAddrModul(self,addr):
         self.addr =addr
@@ -77,26 +76,25 @@ class Client:
         print("Own Address is set to: "+self.addr)
     
       
-    '''
-    SEND ALIV AS KOORDINATOR STATE
-    '''
+    
+    
     #PayLoad are only by request on the CoordinatorDiscovery ADDR or CDIS?!?!?
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
-        message = m.Message("ALIV","0","0","0",self.addr,"FFFF","I am the captian!")
+        message = m.Message("ALIV","0","100","0",self.addr,"FFFF","I am the captian!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())    
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
-        message = m.Message("DISC","0","1","0",self.addr,"FFFF","where are my bro's!")
+        message = m.Message("DISC","0","1","0",self.addr,"FFFF","where are my NeighBROO's!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())    
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
-        message = m.Message("CDIS","0","10","0",self.addr,"FFFF","where are my captain!")
+        message = m.Message("CDIS","0","100","0",self.addr,"FFFF","where are my captain!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage()) 
             
@@ -122,15 +120,7 @@ class Client:
         message.send(self.sio,requestAddress)
         print("Sended Message -> "+message.getMessage())
 
-    
-    def sendALIVForward(self,sio,forwardAlivMessage):
-        if(forwardAlivMessage.ttl > 1):
-            forwardAlivMessage.hops = forwardAliv.hops + 1
-            forwardAlivMessage.ttl = forwardAliv.ttl - 1
-            forwardAlivMessage.send(self.sio,"FFFF")
-            return
-    
-    def sendForwardMessage(self, sio, forwardMessage):
+    def sendForwardMessage(self, forwardMessage):
         if(forwardMessage.ttl > 1):
             forwardMessage.hops = forwardMessage.hops + 1
             forwardMessage.ttl = forwardMessage.ttl - 1
@@ -149,7 +139,7 @@ class Client:
             print("new message from coordinator")
             self.setAddr()
             #ASK for a new Adress
-            setAddr()
+            #setAddr()
             
         if self.state == "NEW" and i== 0:
             self.state= "COOR"
@@ -163,10 +153,21 @@ class Client:
         sio.flush()
         sio.readline()
     
-    def generateNewAddress():
+    def generateNewAddress(self):
         #addressCounter + 1
         newAddress = hex(addressCounter)
         return newAddress
         
+    def setupCoordinator(self):
+        self.state = "COOR"
+        self.cdis = 0
+        self.coordinatorAliv = True
+        self.setAddr()
     
-    
+    def resetCoordinator(self):
+        self.state = "NEW"
+        self.cdis = 0
+        self.coordinatorAddrCounter = 256
+        self.coordinatorAddrStore = []
+        self.coordinatorAliv = False
+        

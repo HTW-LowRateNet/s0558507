@@ -30,23 +30,37 @@ def readSerialLine():
     global message
     while 1:
         read = sio.readline()
+        checkForAction()
         if read != "":
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
-                time.sleep(1)
+                #time.sleep(1)
                 message = tempMessage
                 messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(messageObj)
-                checkForAction(messageObj)
-                if(client.coordinatorAliv == False and (client.state == "NEW" or client.state == "CL")):
-                    client.cdis = client.cdis + 1
-                    #if client.cdis < 4 and client.coordinatorAliv == False:
-                    client.sendCoordinatorDisc()        
                 
+                              
                 
-def checkForAction(message):
-    pass
+def checkForAction():
+    if(client.configured == True):
+        if(client.state == "NEW" and client.coordinatorAliv == False):
+            if(client.cdis <= 3):
+                client.sendCoordinatorDisc()
+                time.sleep(5)
+                client.cdis = client.cdis + 1
+                return
+            if(client.cdis > 2):
+                client.setupCoordinator()
+                return
+
+        if(client.state == "COOR"):
+            client.sendAlive()
+            return
+        if(client.state == "CL"):
+            client.sendNeighboorDisc()
+            return
+     #   return
 
 
 def checkMessageType(message):
@@ -55,27 +69,28 @@ def checkMessageType(message):
     ###################
     if message.type == "ALIV":
         print("i have recieve a TRUE ALIV MESSAGE!!")
+        client.coordinatorAliv = True
+        client.cdis = 0
         # two coordinatorers eventually split action from check message to action use semaphores
         if(client.state == "COOR"):
             client.state = "NEW"
-            client.coordinatorAliv = True
-            client.cdis = 0
+            client.setAddr()
             print("MyState is actually = "+client.state)
             return
         ### TOO MUCH
         if(client.state == "NEW"):
-            client.coordinatorAliv = True
-            client.state = "NEW"
-            client.cdis = 0
-            ### SEND CDIS !!!!!
+            ### SEND ADDR !!!!!
             client.sendAddrRequest()
+            ### SEND CDIS !!!!!
+            #client.sendCoordinatorDisc()
             print("MyState is actually = "+client.state)
             return
+        
         if(client.state == "CL"):
-            client.coordinatorAliv = True
+            ## FORWARD ALIV MESSAAGE
             client.state = "CL"
-            client.cdis = 0
             print("MyState is actually = "+client.state)
+            client.sendForwardMessage(message)
             return
             
     ####################
@@ -85,15 +100,11 @@ def checkMessageType(message):
         print("ADDR REQUEST OR RESPONSE MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
-            #save the new adress and send it to the client
             client.sendAddrResponse(message.srcAddr)
-            #is a point for AACK
-            #client.coordinatorAddrCounter = client.coordinatorAddrStore + 1
-            #client.coordinatorAddrStore.append(client.coordinatorAddrCounter)
             return
         if(client.state == "NEW" and message.destAddr == client.addr):
             print("MyState is actually = "+client.state)
-            print("I will set me a new Address from "+client.addr+" to "+message+msg)
+            print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             client.setAddrModul(message.msg)
             client.sendAddrAckknowledge()
             client.state = "CL"
@@ -114,8 +125,9 @@ def checkMessageType(message):
         if(client.state == "CL"):
             #ignore
             print("MyState is actually = "+client.state)
+            client.sendForwardMessage(message)
             return
-        
+                
     ####################
     ####    HANDLE MESSAGE TYPE ADDR
     ###################
@@ -128,22 +140,14 @@ def checkMessageType(message):
             client.coordinatorAddrStore.append(message.srcAddr)
             #client.sendAddrResponse(message.srcAddr)
             return
-        if(client.state == "NEW"):
-            print("MyState is actually = "+client.state)
+        
+        #IGNORE FOR STATE NEW !!!!!! KISS
+        #if(client.state == "NEW"):
+            #print("MyState is actually = "+client.state)
             #######  ignore   #########
-            ####### FORWARDING!!!!
-            #### SET NACHRICHTEN UND WEITERLEITEN
+            # IAM in STATE NEW not AUTORIZED TO FORWARD MESSAGES!!!!
         if(client.state == "CL"):
-            client.sendForwardMessage(sio, message)
-               
-                
-            #send ACK and set state to CL and set Addr
-            #ACK lauft nicht ueber ADDR!!!
-            #if(message.msgID==1):
-                #client.setAddrModul(message.msg)
-            #else
-                
-                #pass
+            client.sendForwardMessage(message)
             return
     
     
@@ -155,40 +159,25 @@ def checkMessageType(message):
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             client.sendAlive()
-            #save the new adress and send it to the client
             return
-        if(client.state == "NEW"):
-            print("MyState is actually = "+client.state)
+
+        ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
+        #if(client.state == "NEW"):
+            #print("MyState is actually = "+client.state)
             #######  ignore   #########
             ####### FORWARDING!!!!
-            #### SET NACHRICHTEN UND WEITERLEITEN
-            
-            #send ACK and set state to CL and set Addr
-            #ACK lauft nicht ueber ADDR!!!
-            #if(message.msgID==1):
-                #client.setAddrModul(message.msg)
-            #else
-            #ignore
-            return
+            ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
+         #   return
         if(client.state == "CL"):
-            #######  ignore   #########
-            ####### FORWARDING!!!!
-            #### SET NACHRICHTEN UND WEITERLEITEN
-            
-            #send ACK and set state to CL and set Addr
-            #ACK lauft nicht ueber ADDR!!!
-            #if(message.msgID==1):
-                #client.setAddrModul(message.msg)
-            #else
-            #ignore
+            client.sendForwardMessage(message)
             return
-  
+
 start_new_thread(readSerialLine,())
 
-#start_new_thread(runningDevice,())
 
 #keyboard input
-while 1:          
+while 1:
+    
     input_val = input("> ")
     if input_val == 'exit':
         ser.close()
