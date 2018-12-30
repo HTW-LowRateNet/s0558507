@@ -9,29 +9,81 @@ class Client:
         self.state = state
         self.addr = addr
         self.ser = ser
-        self.nabore = nabore
+        self.nb = []
         self.sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
         self.cdis = 0 #is a counter for cdis message
-        
         #messageQueue
-        self.messageSet = {}
-        
-        
+        self.messageStore = []
+        self.messageObj = m.Message("type","msgID","ttl","hops","srcAddr","destAddr","msg")
+ 
         self.coordinatorAddrCounter = 256 #is a counter for the adress generator this is an integer
         #coordinatorAddrStore.append(WERT)
         self.coordinatorAddrStore = []
         #coordinatorAddrStore.append(256)
         self.coordinatorAliv = False
-        
         self.configured = False
-        self.config()
+        #self.config()
+        self.deltaTime = time.time()
         
         
     def config(self):
-        self.configured = False
+        count = 0
         self.state = "NEW"
+        self.configured = False
         print("initial config..")
+        #time.sleep(1)
+        #self.configured = True
+        self.sio.write('AT+RST\r\n')
+        self.sio.flush()
+        time.sleep(0.1)
+        count = count + 1
+       
         
+        self.sio.write('AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4\r\n')
+        self.sio.flush()
+        time.sleep(0.1)
+        count = count + 1
+        
+        #self.setAddr()
+        
+        self.sio.write('AT+SAVE\r\n')
+        self.sio.flush()
+        time.sleep(0.1)
+        count = count + 1
+        
+        self.sio.write('AT+RX\r\n')
+        self.sio.flush()
+        time.sleep(0.1)
+        count = count + 1
+        
+        self.sio.write('AT+DEST=FFFF\r\n')
+        self.sio.flush()
+        time.sleep(0.1)
+        count = count + 1
+        
+        self.setAddr()
+        count = count + 1
+        
+        if count == 6:
+            self.configured = True
+        self.cdis = 0
+        self.coordinatorAddrCounter = 256
+        self.coordinatorAddrStore = []
+        self.coordinatorAliv = False
+        
+        '''
+        rxAT = "AT+RX"
+        saveAT = "AT+SAVE"
+        dstAT = "AT+DEST=FFFF"
+        cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
+        commands = ([cfgAT, saveAT, rxAT])
+        for i in commands:
+            print(i)
+            self.sendCommand(i)
+            if i == len(commands):
+                self.configured = True
+        '''
+       
         '''
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
@@ -43,42 +95,26 @@ class Client:
         rstAT = "AT+RST"
         rxAT = "AT+RX"
         saveAT = "AT+SAVE"
-        saveDST = "AT+DEST=FFFF"
+        saveDST
+        = "AT+DEST=FFFF"
         '''
         
         
-        self.sio.write('AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4\r\n')
+        
+    
+    def setAddrModul(self,newAddr):
+        #addrCMD = "AT+ADDR="+addr+"\r\n"
+        #self.sendCommand(addrCMD)
+        self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(1)
-        
-        #self.setAddr()
-        
+        time.sleep(0.2)
+        self.sio.write('AT+ADDR='+newAddr+'\r\n')
+        self.sio.flush()
+        time.sleep(0.2)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        time.sleep(1)
+        self.addr = newAddr
         
-        self.sio.write('AT+RX\r\n')
-        self.sio.flush()
-        time.sleep(1)
-        
-        self.sio.write('AT+DEST=FFFF\r\n')
-        self.sio.flush()
-        time.sleep(1)
-        
-        '''
-        commands = ([cfgAT, saveAT, rxAT])
-        for i in commands:
-            print(i)
-            self.sendCommand(i)
-        '''
-        self.setAddr
-        time.sleep(1)
-        self.cdis = 0
-        self.configured = True
-    
-    def setAddrModul(self,addr):
-        addrCMD = "AT+ADDR="+addr+"\r\n"
-        self.sendCommand(addrCMD)
         
     def setAddr(self):
         tempAddr = ""
@@ -103,80 +139,81 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
-        message = m.Message("ALIV","0","100","0",self.addr,"FFFF","I am the captian!")
+        message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian!")
         message.send(self.sio,"FFFF")
-        print("Sended Message -> "+message.getMessage())    
+        print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
-        message = m.Message("DISC","0","1","0",self.addr,"FFFF","where are my NeighBROO's!")
+        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","where are my NeighBROO's!")
         message.send(self.sio,"FFFF")
-        print("Sended Message -> "+message.getMessage())    
+        print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
-        message = m.Message("CDIS","0","100","0",self.addr,"FFFF","where are my captain!")
+        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where are my captain!")
         message.send(self.sio,"FFFF")
-        print("Sended Message -> "+message.getMessage()) 
+        print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
-        message = m.Message("ADDR","0","10","0",self.addr,"0000","captain give me a job!")
+        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job!")
         message.send(self.sio,"FFFF")
-        print("Sended Message -> "+message.getMessage()) 
+        print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
-        message = m.Message("AACK","0","10","0",self.addr,"0000","captain thanks for the job!")
+        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job!")
         message.send(self.sio,"FFFF")
-        print("Sended Message -> "+message.getMessage()) 
+        print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
     
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
         #while self.state == "COOR":
-        newAdress = str(self.generateNewAddress())
+        generatedAdress = str(self.generateNewAddress())
         #0x0000 0x was cut for a better use
-        newAdress.replace("0x","",1).upper 
-        message = m.Message("ADDR","1","10","0",self.addr,requestAddress,newAdress)
+        newAdress = generatedAdress.replace("0x","",1).upper() 
+        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
         message.send(self.sio,requestAddress)
         print("Sended Message -> "+message.getMessage())
+        self.appendToMessageStore(message.getMessage())
 
     def sendForwardMessage(self, forwardMessage):
-        if(forwardMessage.ttl > 1):
-            forwardMessage.hops = forwardMessage.hops + 1
-            forwardMessage.ttl = forwardMessage.ttl - 1
+        if int(forwardMessage.ttl) > 1:
+            forwardMessage.hops = int(forwardMessage.hops) + 1
+            forwardMessage.ttl = int(forwardMessage.ttl) - 1
             forwardMessage.send(self.sio,"FFFF")
+            self.appendToMessageStore(forwardMessage.getMessage())
             return
     
     #need to run an dummy 
-    def adrDiscovery(self, message,i):
+    def adrDiscovery(self):
+        #while i==0:
+        print("!!!!!!!!!!CDIS AUFRUF!!!!!!!!!")
         print("Address Discovery..")
-        self.sio.write('AT+RX\r\n')
-        self.sio.flush()
-        time.sleep(1)
-        if message == "ALIV":
-            print("I am not the Captian")
-            self.state = "CL"
-            print("new message from coordinator")
-            self.setAddr()
-            #ASK for a new Adress
-            #setAddr()
-            
-        if self.state == "NEW" and i== 0:
-            self.state= "COOR"
-            self.setAddr()
-           # coordinatorSendNotify()
-        time.sleep(1)
+        time.sleep(0.1)
+        self.sendCoordinatorDisc()
+        time.sleep(0.1)
+        if self.coordinatorAliv:
+            return
+        self.cdis = self.cdis + 1
         
+            
     #CommandSend Method
     def sendCommand(self,command):
         self.sio.write(command + '\r\n')
         self.sio.flush()
         self.sio.readline()
+        time.sleep(0.2)
     
     def generateNewAddress(self):
-        #addressCounter + 1
-        newAddress = hex(addressCounter)
+        #self.coordinatorAddrCounter = self.coordinatorAddrCounter + 1
+        newAddress = hex(self.coordinatorAddrCounter+1)
         return newAddress
         
     def setupCoordinator(self):
@@ -186,9 +223,17 @@ class Client:
         self.setAddr()
     
     def resetCoordinator(self):
-        self.state = "NEW"
-        self.cdis = 0
-        self.coordinatorAddrCounter = 256
-        self.coordinatorAddrStore = []
-        self.coordinatorAliv = False
+        for i in xrange(3):
+            message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
+            message.send(self.sio,"FFFF")
+            print("Sended Message -> "+message.getMessage())
+        self.config()
+        #self.state = "NEW"
         
+        #self.setAddr()
+        
+    def uniqueMID(self):
+        return str(random.randint(0,9999999999))
+    
+    def appendToMessageStore(self,message):
+        self.messageStore.append(message)

@@ -9,6 +9,7 @@ from _thread import start_new_thread
 ser = serial.Serial ("/dev/ttyUSB0")
 ser.timeout = 0.3
 ser.baudrate = 115200
+sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
 
 read = Message.Message("ADDR","0","0","0","0100","ffff","I am Not the captian!")
 
@@ -26,9 +27,9 @@ def sendAddr(self):
         message = Message.Message("ALIV","0","0","0",self.addr,"ffff","I am the captian!")
         message.send(self.sio,"ffff")
         print("Meesge"+message.getMessage())
-            
+        
 test = client.Client("NEW",ser,"",[])
-test.config()
+#test.config()
 i= 3
 while i>=0:
     test.adrDiscovery(read,i)

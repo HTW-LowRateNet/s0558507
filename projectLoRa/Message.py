@@ -45,17 +45,18 @@ class Message:
         
     
     def messageSize(self):
-        str = self.getMessage()
-        size = len(str)
-        return size
+        string = self.getMessage()
+        size = len(string)
+        return str(size)
            
     def getMessage(self):
-        string = self.type+","+self.msgID+","+self.ttl+","+self.hops+","+self.srcAddr+","+self.destAddr+","+self.msg+","
+        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)+","
         return string
     
     def send(self,sio,dest):
         time.sleep(1)
-        sio.write('AT+SEND='+str(self.messageSize())+'\r\n')
+        size = self.messageSize()
+        sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
         time.sleep(1)
         sio.write(self.getMessage())

@@ -8,7 +8,7 @@ from _thread import start_new_thread
 
 #ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
 ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
-ser.timeout = 0.3
+ser.timeout = 0.1
 ser.baudrate = 115200
 
 read = ""
@@ -21,45 +21,61 @@ sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
 
 client = client.Client("NEW",ser,"",[])
 
-client.config()
-
-
+start_new_thread(client.config,())
 
 def readSerialLine():
+    
     global read
     global message
     while 1:
         read = sio.readline()
-        checkForAction()
         if read != "":
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
-                #time.sleep(1)
                 message = tempMessage
-                messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
-                checkMessageType(messageObj)
-                
+                client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
+                checkMessageType(client.messageObj)
+                client.messageStore.append(client.messageObj.getMessage())
+        #print("STATE = "+client.state)
+        #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
+        if client.configured:
+            checkForAction()
+                    
                               
                 
 def checkForAction():
-    if(client.configured == True):
-        if(client.state == "NEW" and client.coordinatorAliv == False):
-            if(client.cdis <= 3):
-                client.sendCoordinatorDisc()
-                time.sleep(5)
-                client.cdis = client.cdis + 1
-                return
-            if(client.cdis > 2):
-                client.setupCoordinator()
-                return
-
-        if(client.state == "COOR"):
+    if not client.coordinatorAliv and client.state == "NEW" and client.configured:
+        #if client.cdis <= 3 and client.configured:
+        #print("ich will --> cdis == "+str(client.cdis))
+        if client.cdis == 3:
+            print("cdis = "+str(client.cdis))
+            client.state = "COOR"
+            client.setAddrModul("0000")
+            return
+        else:
+            timeN = time.time()
+            actualDelta = timeN - client.deltaTime
+            #print("DELTATIME --> " +str(actualDelta))
+            
+            if actualDelta > 10:
+                client.deltaTime = time.time()
+                client.adrDiscovery()
+    if(client.state == "COOR"):
+        timeN = time.time()
+        actualDelta = timeN - client.deltaTime
+        #print("DELTATIME --> " +str(actualDelta))
+        if actualDelta > 10:
+            client.deltaTime = time.time()
             client.sendAlive()
-            return
-        if(client.state == "CL"):
+            print(client.messageStore)
+    if(client.state == "CL"):
+        timeN = time.time()
+        actualDelta = timeN - client.deltaTime
+        if actualDelta > 20:
+            client.deltaTime = time.time()
             client.sendNeighboorDisc()
-            return
+            print(client.messageStore)
      #   return
 
 
@@ -73,11 +89,11 @@ def checkMessageType(message):
         client.cdis = 0
         # two coordinatorers eventually split action from check message to action use semaphores
         if(client.state == "COOR"):
-            client.state = "NEW"
-            client.setAddr()
+            client.resetCoordinator()
+            #client.state = "NEW"
+            #client.setAddr()
             print("MyState is actually = "+client.state)
             return
-        ### TOO MUCH
         if(client.state == "NEW"):
             ### SEND ADDR !!!!!
             client.sendAddrRequest()
@@ -103,24 +119,25 @@ def checkMessageType(message):
             client.sendAddrResponse(message.srcAddr)
             return
         if(client.state == "NEW" and message.destAddr == client.addr):
-            print("MyState is actually = "+client.state)
-            print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
-            client.setAddrModul(message.msg)
-            client.sendAddrAckknowledge()
+            print("MyState is actually = "+client.state+"is set to --> ")
             client.state = "CL"
             print("MyState is actually = "+client.state)
+            print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
+            client.setAddrModul(str(message.msg))
+            time.sleep(0.1)
+            client.sendAddrAckknowledge()
             print("MY NEW ADDR = "+client.addr)
             #######  ignore   #########
             ####### FORWARDING!!!!
             #### SET NACHRICHTEN UND WEITERLEITEN
-            
+            #!!!!!!!!!
             #send ACK and set state to CL and set Addr
             #ACK lauft nicht ueber ADDR!!!
             #if(message.msgID==1):
                 #client.setAddrModul(message.msg)
             #else
                 
-                #pass
+            #pass
             return
         if(client.state == "CL"):
             #ignore
@@ -136,8 +153,10 @@ def checkMessageType(message):
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             #save the new adress and send it to the client
-            client.coordinatorAddrCounter = client.coordinatorAddrStore + 1
-            client.coordinatorAddrStore.append(message.srcAddr)
+            client.coordinatorAddrCounter = client.coordinatorAddrCounter + 1
+            aackAddr = str(message.srcAddr)
+            client.coordinatorAddrStore.append(aackAddr)
+            print("ADDRESSSTORE --> "+str(client.coordinatorAddrStore))
             #client.sendAddrResponse(message.srcAddr)
             return
         
@@ -160,7 +179,6 @@ def checkMessageType(message):
             print("MyState is actually = "+client.state)
             client.sendAlive()
             return
-
         ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
         #if(client.state == "NEW"):
             #print("MyState is actually = "+client.state)
@@ -171,13 +189,33 @@ def checkMessageType(message):
         if(client.state == "CL"):
             client.sendForwardMessage(message)
             return
+    #####
+    ##  HandleNetworkReset
+    ######
+    if message.type == "NRST":
+        client.config()
+        
+    if message.type == "DISC":
+        for i in client.nb:
+            if i != str(message.srcAddr): 
+                client.nb.append(str(message.srcAddr))
+                nb.sort()
+                break
+        print(str(client.nb))
+  
+        
+   
+    
+
+#while client.state == "NEW":
+#    client.adrDiscovery(3)
 
 start_new_thread(readSerialLine,())
 
 
 #keyboard input
 while 1:
-    
+    #readSerialLine()
     input_val = input("> ")
     if input_val == 'exit':
         ser.close()
@@ -186,5 +224,5 @@ while 1:
         sio.write(input_val + '\r\n')
         sio.flush()
         #print(">>"+sio.readline())
-  
+ 
 ser.close()
