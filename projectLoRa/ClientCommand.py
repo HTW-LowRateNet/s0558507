@@ -21,7 +21,7 @@ sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
 
 client = client.Client("NEW",ser,"",[])
 
-client.config()
+#client.config()
 
 
 
@@ -30,36 +30,35 @@ def readSerialLine():
     global message
     while 1:
         read = sio.readline()
-        checkForAction()
         if read != "":
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
-                #time.sleep(1)
                 message = tempMessage
                 messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(messageObj)
+            checkForAction()
                 
                               
                 
 def checkForAction():
-    if(client.configured == True):
-        if(client.state == "NEW" and client.coordinatorAliv == False):
-            if(client.cdis <= 3):
-                client.sendCoordinatorDisc()
-                time.sleep(5)
-                client.cdis = client.cdis + 1
-                return
-            if(client.cdis > 2):
-                client.setupCoordinator()
-                return
-
-        if(client.state == "COOR"):
-            client.sendAlive()
-            return
-        if(client.state == "CL"):
-            client.sendNeighboorDisc()
-            return
+    if(client.state == "NEW" and client.coordinatorAliv == False):
+        if(client.cdis <= 3 and client.configured):
+            print("!!!!!!!!!!CDIS AUFRUF!!!!!!!!!")
+            client.sendCoordinatorDisc()
+            client.cdis = client.cdis + 1
+            if(client.cdis == 3):
+                client.cdis = 99
+        if(client.cdis == 99):
+            print("KOORDINATOR SETUP")
+            client.state = "COOR"
+            client.setAddr
+            #client.setupCoordinator()
+    if(client.state == "COOR"):
+        client.sendAlive()
+    if(client.state == "CL"):
+        client.sendNeighboorDisc()
+            
      #   return
 
 
@@ -177,7 +176,6 @@ start_new_thread(readSerialLine,())
 
 #keyboard input
 while 1:
-    
     input_val = input("> ")
     if input_val == 'exit':
         ser.close()

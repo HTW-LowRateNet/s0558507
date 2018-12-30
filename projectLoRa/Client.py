@@ -24,52 +24,73 @@ class Client:
         self.coordinatorAliv = False
         
         self.configured = False
+        self.config()
         
         
     def config(self):
         self.configured = False
         self.state = "NEW"
         print("initial config..")
+        
+        '''
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
         time.sleep(0.500)
+        '''
+        
+        '''
+        cfgAT = "AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4"
         rstAT = "AT+RST"
         rxAT = "AT+RX"
         saveAT = "AT+SAVE"
         saveDST = "AT+DEST=FFFF"
+        '''
+        
+        
         self.sio.write('AT+CFG=433000000,20,9,10,1,1,0,0,0,0,3000,8,4\r\n')
         self.sio.flush()
-        time.sleep(0.500)
-        self.setAddr()
+        time.sleep(1)
+        
+        #self.setAddr()
+        
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        time.sleep(0.500)
+        time.sleep(1)
+        
         self.sio.write('AT+RX\r\n')
         self.sio.flush()
-        time.sleep(0.500)
+        time.sleep(1)
+        
         self.sio.write('AT+DEST=FFFF\r\n')
         self.sio.flush()
-        time.sleep(0.500)
-        self.configured = True
+        time.sleep(1)
+        
+        '''
+        commands = ([cfgAT, saveAT, rxAT])
+        for i in commands:
+            print(i)
+            self.sendCommand(i)
+        '''
+        self.setAddr
+        time.sleep(1)
         self.cdis = 0
-  
+        self.configured = True
+    
     def setAddrModul(self,addr):
-        self.addr =addr
-        self.sio.write('AT+ADDR='+self.addr+'\r\n')
-        self.sio.flush()
+        addrCMD = "AT+ADDR="+addr+"\r\n"
+        self.sendCommand(addrCMD)
         
     def setAddr(self):
         tempAddr = ""
         if self.state == "NEW":
             tempAddr = str(random.randint(16,100))           
         if self.state == "COOR":
-            tempAddr = "0"
+            tempAddr = "0000"
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
             message = m.Message("ADDR","0","0","0",self.addr,"0","")
             print(message.toString)
             #tempAddr = "300"
-    
         self.addr = tempAddr
         self.sio.write('AT+ADDR='+tempAddr+'\r\n')
         self.sio.flush()
@@ -148,10 +169,10 @@ class Client:
         time.sleep(1)
         
     #CommandSend Method
-    def sendCommand(command):
-        sio.write(command + '\r\n')
-        sio.flush()
-        sio.readline()
+    def sendCommand(self,command):
+        self.sio.write(command + '\r\n')
+        self.sio.flush()
+        self.sio.readline()
     
     def generateNewAddress(self):
         #addressCounter + 1

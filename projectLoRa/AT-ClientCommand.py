@@ -35,7 +35,7 @@ def readSerialLine():
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
-                time.sleep(1)
+                #time.sleep(1)
                 message = tempMessage
                 messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(messageObj)
@@ -43,7 +43,7 @@ def readSerialLine():
                               
                 
 def checkForAction():
-    #if(client.configured==True):
+    if(client.configured == True):
         if(client.state == "NEW" and client.coordinatorAliv == False):
             if(client.cdis <= 3):
                 client.sendCoordinatorDisc()
@@ -172,9 +172,8 @@ def checkMessageType(message):
             client.sendForwardMessage(message)
             return
 
-if(client.configured==True):
-    start_new_thread(readSerialLine,())
-    #start_new_thread(checkForAction,())
+start_new_thread(readSerialLine,())
+
 
 #keyboard input
 while 1:
