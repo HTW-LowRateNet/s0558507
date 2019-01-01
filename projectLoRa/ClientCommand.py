@@ -11,6 +11,9 @@ ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
 ser.timeout = 0.1
 ser.baudrate = 115200
 
+#unbedingt implementieren .... das sorgt dafür den BufferVernünftig zu Managen
+#ser.inWaitung()
+
 read = ""
 message = []
 
@@ -28,6 +31,9 @@ def readSerialLine():
     global read
     global message
     while 1:
+        #if ser.isWaiting() > 4:
+        #Dann erst ReadLine
+        #
         read = sio.readline()
         if read != "":
             print(read)
