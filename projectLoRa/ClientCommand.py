@@ -6,8 +6,8 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.1
 ser.baudrate = 115200
 
@@ -34,8 +34,9 @@ def readSerialLine():
         #if ser.isWaiting() > 4:
         #Dann erst ReadLine
         #
-        read = sio.readline()
-        if read != "":
+        if ser.inWaiting():
+            read = sio.readline()
+            #if read != "":
             print(read)
             tempMessage = read.split(',')
             if len(tempMessage) > 4:
@@ -43,6 +44,9 @@ def readSerialLine():
                 client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(client.messageObj)
                 client.messageStore.append(client.messageObj.getMessage())
+            #if len(tempMessage) > 10:
+                #break
+                
         #print("STATE = "+client.state)
         #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
         if client.configured:
@@ -54,7 +58,7 @@ def checkForAction():
     if not client.coordinatorAliv and client.state == "NEW" and client.configured:
         #if client.cdis <= 3 and client.configured:
         #print("ich will --> cdis == "+str(client.cdis))
-        if client.cdis == 3:
+        if client.cdis == 1:
             print("cdis = "+str(client.cdis))
             client.state = "COOR"
             client.setAddrModul("0000")
@@ -89,6 +93,7 @@ def checkMessageType(message):
     ####################
     ####    HANDLE MESSAGE TYPE ALIV
     ###################
+    #### TODO: FORWARDING ALIV ABFANGEN !!!!!
     if message.type == "ALIV":
         print("i have recieve a TRUE ALIV MESSAGE!!")
         client.coordinatorAliv = True
@@ -208,6 +213,11 @@ def checkMessageType(message):
                 nb.sort()
                 break
         print(str(client.nb))
+    
+    if message.type == "MSSG":
+        if client.state == "CL" or client.state == "COOR":
+            client.sendForwardMessage(message)
+        
   
         
    

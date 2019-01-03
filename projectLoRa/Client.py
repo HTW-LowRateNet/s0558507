@@ -146,14 +146,14 @@ class Client:
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
-        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","where are my NeighBROO's!")
+        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's???")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
-        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where are my captain!")
+        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
@@ -223,17 +223,22 @@ class Client:
         self.setAddr()
     
     def resetCoordinator(self):
-        for i in xrange(3):
-            message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
-            message.send(self.sio,"FFFF")
-            print("Sended Message -> "+message.getMessage())
+        #for i in xrange(3):
+        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
+        message.send(self.sio,"FFFF")
+        print("Sended Message -> "+message.getMessage())
+        time.sleep(1)
+        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
+        message.send(self.sio,"FFFF")
+        print("Sended Message -> "+message.getMessage())
         self.config()
+        
         #self.state = "NEW"
         
         #self.setAddr()
         
     def uniqueMID(self):
-        return str(random.randint(0,9999999999))
+        return str(random.randint(0,999999))
     
     def appendToMessageStore(self,message):
         self.messageStore.append(message)
