@@ -58,7 +58,7 @@ def checkForAction():
     if not client.coordinatorAliv and client.state == "NEW" and client.configured:
         #if client.cdis <= 3 and client.configured:
         #print("ich will --> cdis == "+str(client.cdis))
-        if client.cdis == 1:
+        if client.cdis == 3:
             print("cdis = "+str(client.cdis))
             client.state = "COOR"
             client.setAddrModul("0000")
