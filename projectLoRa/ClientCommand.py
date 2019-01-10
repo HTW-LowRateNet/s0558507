@@ -6,9 +6,11 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.1
+#ser.write_timeout = 0.1
+#ser.xonxoff = True
 ser.baudrate = 115200
 
 #unbedingt implementieren .... das sorgt dafür den BufferVernünftig zu Managen
@@ -45,7 +47,7 @@ def readSerialLine():
                 checkMessageType(client.messageObj)
                 
                 client.messageTupel = (client.messageObj,time.time())
-                client.appendToMessageStore( client.messageTupel)
+                #client.appendToMessageStore( client.messageTupel)
                 #client.messageStore.append(client.messageObj.getMessage())
             if len(tempMessage) > 10:
                 break
@@ -65,30 +67,30 @@ def checkForAction():
             print("cdis = "+str(client.cdis))
             client.state = "COOR"
             client.setAddrModul("0000")
+            client.sendAlive()
             return
         else:
             timeN = time.time()
             actualDelta = timeN - client.deltaTime
             #print("DELTATIME --> " +str(actualDelta))
-            
-            if actualDelta > 10:
+            if actualDelta > 5:
                 client.deltaTime = time.time()
                 client.adrDiscovery()
     if(client.state == "COOR"):
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 10:
+        if actualDelta > 60:
             client.deltaTime = time.time()
             client.sendAlive()
-            print(client.messageStore)
+            #print(client.messageStore)
     if(client.state == "CL"):
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         if actualDelta > 20:
             client.deltaTime = time.time()
             client.sendNeighboorDisc()
-            print(client.messageStore)
+            #print(client.messageStore)
      #   return
      
 def checkMessageInStore(message):
@@ -123,16 +125,16 @@ def checkMessageType(message):
         client.cdis = 0
         # two coordinatorers eventually split action from check message to action use semaphores
         if(client.state == "COOR"):
-            if not checkMessageInStore(message):
-                client.resetCoordinator()
+            #if checkMessageInStore(message) == False:
+            client.resetCoordinator()
             #client.state = "NEW"
             #client.setAddr()
             print("MyState is actually = "+client.state)
             return
         if(client.state == "NEW"):
             ### SEND ADDR !!!!!
-            if not checkMessageInStore(message):
-                client.sendAddrRequest()
+            #if checkMessageInStore(message) == False:
+            client.sendAddrRequest()
             ### SEND CDIS !!!!!
             #client.sendCoordinatorDisc()
             print("MyState is actually = "+client.state)
@@ -142,8 +144,8 @@ def checkMessageType(message):
             ## FORWARD ALIV MESSAAGE
             client.state = "CL"
             print("MyState is actually = "+client.state)
-            if not checkMessageInStore(message):
-                client.sendForwardMessage(message)
+            #if not checkMessageInStore(message):
+            client.sendForwardMessage(message)
             return
             
     ####################
@@ -153,8 +155,8 @@ def checkMessageType(message):
         print("ADDR REQUEST OR RESPONSE MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
-            if not checkMessageInStore(message):
-                client.sendAddrResponse(message.srcAddr)
+            #if checkMessageInStore(message) == False:
+            client.sendAddrResponse(message.srcAddr)
             return
         if(client.state == "NEW" and message.destAddr == client.addr):
             print("MyState is actually = "+client.state+"is set to --> ")
@@ -180,8 +182,8 @@ def checkMessageType(message):
         if(client.state == "CL"):
             #ignore
             print("MyState is actually = "+client.state)
-            if not checkMessageInStore(message):
-                client.sendForwardMessage(message)
+            #if not checkMessageInStore(message):
+            client.sendForwardMessage(message)
             return
                 
     ####################
@@ -205,8 +207,8 @@ def checkMessageType(message):
             #######  ignore   #########
             # IAM in STATE NEW not AUTORIZED TO FORWARD MESSAGES!!!!
         if(client.state == "CL"):
-            if not checkMessageInStore(message):
-                client.sendForwardMessage(message)
+            #if checkMessageInStore(message) == False:
+            client.sendForwardMessage(message)
             return
     
     
@@ -217,8 +219,8 @@ def checkMessageType(message):
         print("CDIS REQUEST MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
-            if not checkMessageInStore(message):
-                client.sendAlive()
+            #if checkMessageInStore(message) == False:
+            client.sendAlive()
             return
         ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
         #if(client.state == "NEW"):
@@ -228,15 +230,15 @@ def checkMessageType(message):
             ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
          #   return
         if(client.state == "CL"):
-            if not checkMessageInStore(message):
-                client.sendForwardMessage(message)
+            #if checkMessageInStore(message) == False:
+            client.sendForwardMessage(message)
             return
     #####
     ##  HandleNetworkReset
     ######
     if message.type == "NRST":
-        if not checkMessageInStore(message):
-            client.sendForwardMessage(message)
+        #if checkMessageInStore(message) == False:
+        client.sendForwardMessage(message)
         client.config()
         
     if message.type == "DISC":

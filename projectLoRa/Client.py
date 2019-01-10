@@ -141,52 +141,58 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
+        time.sleep(0.01)
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
+        time.sleep(0.01)
         message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's???")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
                                    
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
+        time.sleep(0.01)
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
+        time.sleep(0.01)
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
+        time.sleep(0.01)
         message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
     
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
         #while self.state == "COOR":
+        time.sleep(0.01)
         generatedAdress = str(self.generateNewAddress())
         #0x0000 0x was cut for a better use
         newAdress = generatedAdress.replace("0x","",1).upper() 
@@ -195,16 +201,17 @@ class Client:
         print("Sended Message -> "+message.getMessage())
         #self.appendToMessageStore(message.getMessage())
         self.messageTupel = (message,time.time())
-        self.appendToMessageStore( self.messageTupel)
+        #self.appendToMessageStore( self.messageTupel)
 
     def sendForwardMessage(self, forwardMessage):
         if int(forwardMessage.ttl) > 1:
+            time.sleep(0.01)
             forwardMessage.hops = int(forwardMessage.hops) + 1
             forwardMessage.ttl = int(forwardMessage.ttl) - 1
             forwardMessage.send(self.sio,"FFFF")
             #self.appendToMessageStore(forwardMessage.getMessage())
             self.messageTupel = (forwardMessage,time.time())
-            self.appendToMessageStore( self.messageTupel)
+            #self.appendToMessageStore( self.messageTupel)
             return
     
     #need to run an dummy 
