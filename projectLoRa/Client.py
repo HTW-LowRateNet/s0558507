@@ -15,7 +15,9 @@ class Client:
         #messageQueue
         self.messageStore = []
         self.messageObj = m.Message("type","msgID","ttl","hops","srcAddr","destAddr","msg")
- 
+        
+        self.messageTupel = (self.messageObj,time.time())
+        
         self.coordinatorAddrCounter = 256 #is a counter for the adress generator this is an integer
         #coordinatorAddrStore.append(WERT)
         self.coordinatorAddrStore = []
@@ -142,35 +144,45 @@ class Client:
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
         message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's???")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
-            
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
+                                   
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
         message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job!")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
     
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
@@ -181,14 +193,18 @@ class Client:
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
         message.send(self.sio,requestAddress)
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        #self.appendToMessageStore(message.getMessage())
+        self.messageTupel = (message,time.time())
+        self.appendToMessageStore( self.messageTupel)
 
     def sendForwardMessage(self, forwardMessage):
         if int(forwardMessage.ttl) > 1:
             forwardMessage.hops = int(forwardMessage.hops) + 1
             forwardMessage.ttl = int(forwardMessage.ttl) - 1
             forwardMessage.send(self.sio,"FFFF")
-            self.appendToMessageStore(forwardMessage.getMessage())
+            #self.appendToMessageStore(forwardMessage.getMessage())
+            self.messageTupel = (forwardMessage,time.time())
+            self.appendToMessageStore( self.messageTupel)
             return
     
     #need to run an dummy 
@@ -240,5 +256,5 @@ class Client:
     def uniqueMID(self):
         return str(random.randint(0,999999))
     
-    def appendToMessageStore(self,message):
-        self.messageStore.append(message)
+    def appendToMessageStore(self,messageTupel):
+        self.messageStore.append(messageTupel)
