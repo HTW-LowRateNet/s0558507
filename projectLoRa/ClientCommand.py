@@ -39,13 +39,13 @@ def readSerialLine():
             #if read != "":
             print(read)
             tempMessage = read.split(',')
-            if len(tempMessage) > 4:
+            if len(tempMessage) == 10:
                 message = tempMessage
                 client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
                 checkMessageType(client.messageObj)
                 client.messageStore.append(client.messageObj.getMessage())
-            #if len(tempMessage) > 10:
-                #break
+            if len(tempMessage) > 10:
+                pass#break
                 
         #print("STATE = "+client.state)
         #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
@@ -58,24 +58,25 @@ def checkForAction():
     if not client.coordinatorAliv and client.state == "NEW" and client.configured:
         #if client.cdis <= 3 and client.configured:
         #print("ich will --> cdis == "+str(client.cdis))
-        if client.cdis == 1:
+        if client.cdis == 10:
             print("cdis = "+str(client.cdis))
             client.state = "COOR"
             client.setAddrModul("0000")
+            #client.sendAlive()
             return
         else:
             timeN = time.time()
             actualDelta = timeN - client.deltaTime
             #print("DELTATIME --> " +str(actualDelta))
             
-            if actualDelta > 10:
+            if actualDelta > 5:
                 client.deltaTime = time.time()
                 client.adrDiscovery()
     if(client.state == "COOR"):
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 10:
+        if actualDelta > 60:
             client.deltaTime = time.time()
             client.sendAlive()
             print(client.messageStore)
@@ -215,8 +216,8 @@ def checkMessageType(message):
         print(str(client.nb))
     
     if message.type == "MSSG":
-        if client.state == "CL" or client.state == "COOR":
-            client.sendForwardMessage(message)
+        #if client.state == "CL" or client.state == "COOR":
+        client.sendForwardMessage(message)
         
   
         
@@ -237,8 +238,9 @@ while 1:
         ser.close()
         exit()
     else:
-        sio.write(input_val + '\r\n')
-        sio.flush()
+        client.sendMSSG(input_val)
+        #sio.write(input_val + '\r\n')
+        #sio.flush()
         #print(">>"+sio.readline())
  
 ser.close()
