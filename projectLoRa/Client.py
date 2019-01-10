@@ -139,35 +139,35 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
-        message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian!")
+        message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
-        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's???")
+        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's??? (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
-        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain!")
+        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
-        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job!")
+        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
-        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job!")
+        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.appendToMessageStore(message.getMessage())
@@ -224,11 +224,11 @@ class Client:
     
     def resetCoordinator(self):
         #for i in xrange(3):
-        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
+        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         time.sleep(1)
-        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW!")
+        message = m.Message("NRST",self.uniqueMID(),"100","0",self.addr,"FFFF","RESET THE NETWORK ... KNOW! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         self.config()
