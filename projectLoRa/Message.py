@@ -58,9 +58,11 @@ class Message:
         size = self.messageSize()
         sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
-        time.sleep(0.2)
+        time.sleep(.100)
         #if sio.writable:
         #while not sio.writable:
         sio.write(self.getMessage())
         sio.flush
-        time.sleep(0.2)
+        time.sleep(.100)
+        
+        #time.sleep(0.2)

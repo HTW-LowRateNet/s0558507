@@ -41,7 +41,7 @@ def loop():
     while 1:
         #test.sendAlive()
         #test.sendCoordinatorDisc()
-        test.sendAddrRequest()
+        test.sendAddrAckknowledge()
         read = sio.readline()
             #if read != "":
         print(read)

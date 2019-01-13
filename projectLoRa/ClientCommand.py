@@ -8,7 +8,7 @@ from _thread import start_new_thread
 
 ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
 #ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
-ser.timeout = 1
+ser.timeout = 0.1
 ser.baudrate = 115200
 
 
@@ -23,7 +23,7 @@ if(not ser.isOpen()):
 
 sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))#BufferedRWPair(ser,ser))
 
-client = client.Client("NEW",ser,"",[])
+client = client.Client("NEW",sio,"",[])
 
 start_new_thread(client.config,())
 
@@ -33,11 +33,12 @@ def readSerialLine():
     global message
     while 1:
         if ser.inWaiting():
+            
             read = sio.readline()
             #if read != "":
             print(read)
             tempMessage = read.split(',')
-            if len(tempMessage) > 5:
+            if len(tempMessage) > 8:
                 message = tempMessage
                 client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],",".join(message[9:]))
                 if not client.messageInStore(client.messageObj):
@@ -53,7 +54,9 @@ def readSerialLine():
         #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
         if client.configured:
             checkForAction()
-                    
+        ser.flush()
+        #ser.reset_input_buffer()
+        #ser.flush()#reset_input_buffer()        
                               
                 
 def checkForAction():
@@ -80,7 +83,7 @@ def checkForAction():
         if actualDelta > 10:
             client.deltaTime = time.time()
             client.sendAlive()
-            print(client.messageStore)
+            #print(client.messageStore)
             
     if(client.state == "CL"):
         timeN = time.time()
@@ -97,8 +100,9 @@ def checkMessageType(message):
     ####    HANDLE MESSAGE TYPE ALIV
     ###################
     #### TODO: FORWARDING ALIV ABFANGEN !!!!!
+    print("####################### imessageTYPE -> : "+message.type)
     if message.type == "ALIV":
-        print("i have recieve a TRUE ALIV MESSAGE!!")
+        print("####################### i have recieve a TRUE ALIV MESSAGE!!")
         client.coordinatorAliv = True
         client.cdis = 0
         # two coordinatorers eventually split action from check message to action use semaphores
@@ -127,7 +131,7 @@ def checkMessageType(message):
     ####    HANDLE MESSAGE TYPE ADDR
     ###################
     if message.type == "ADDR":
-        print("ADDR REQUEST OR RESPONSE MESSAGE")
+        print("####################### ADDR REQUEST OR RESPONSE MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             client.sendAddrResponse(message.srcAddr)
@@ -137,8 +141,8 @@ def checkMessageType(message):
             client.state = "CL"
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
-            client.setAddrModul(str(message.msg))
-            time.sleep(0.1)
+            client.setAddrModul(str(message.msg).upper().zfill(4))#.upper.zfill(4))
+            time.sleep(.100)
             client.sendAddrAckknowledge()
             print("MY NEW ADDR = "+client.addr)
             #######  ignore   #########
@@ -162,13 +166,13 @@ def checkMessageType(message):
     ####################
     ####    HANDLE MESSAGE TYPE ADDR
     ###################
-    if message.type == "AACK":
-        print("ADDR REQUEST ACKNOWLEDGE")
+    if message.type is "AACK":
+        print("####################### ADDR REQUEST ACKNOWLEDGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             #save the new adress and send it to the client
             client.coordinatorAddrCounter = client.coordinatorAddrCounter + 1
-            aackAddr = str(message.srcAddr)
+            aackAddr = str(message.srcAddr).upper().zfill(4)
             client.coordinatorAddrStore.append(aackAddr)
             print("ADDRESSSTORE --> "+str(client.coordinatorAddrStore))
             #client.sendAddrResponse(message.srcAddr)
@@ -188,7 +192,7 @@ def checkMessageType(message):
     ####    HANDLE MESSAGE TYPE CDIS
     ###################
     if message.type == "CDIS":
-        print("CDIS REQUEST MESSAGE")
+        print("####################### CDIS REQUEST MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             client.sendAlive()
@@ -211,6 +215,7 @@ def checkMessageType(message):
         client.config()
         
     if message.type == "DISC":
+        print("####################### DISC MESSAGE")
         for i in client.nb:
             if i != str(message.srcAddr): 
                 client.nb.append(str(message.srcAddr))
@@ -219,6 +224,7 @@ def checkMessageType(message):
         print(str(client.nb))
     
     if message.type == "MSSG":
+        print("####################### MSSG MESSAGE")
         if client.state == "CL" or client.state == "COOR":
             client.sendForwardMessage(message)
 

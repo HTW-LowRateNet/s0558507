@@ -5,12 +5,12 @@ import random
 import Message as m
 
 class Client:
-    def __init__(self,state,ser,addr,nabore):
+    def __init__(self,state,sio,addr,nabore):
         self.state = state
         self.addr = addr
-        self.ser = ser
+        #self.ser = ser
         self.nb = []
-        self.sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
+        self.sio = sio#io.TextIOWrapper(io.BufferedRWPair(ser,ser))
         self.cdis = 0 #is a counter for cdis message
         #messageQueue
         self.messageStore = []
@@ -107,14 +107,14 @@ class Client:
         #self.sendCommand(addrCMD)
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(0.1)
+        time.sleep(.100)
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
-        time.sleep(0.1)
+        time.sleep(.100)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
         self.addr = newAddr
-        time.sleep(0.1)
+        time.sleep(0.400)
         
         
     def setAddr(self):
@@ -141,7 +141,9 @@ class Client:
     def sendAlive(self):
         #while self.state == "COOR":
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian! (Micha)")
+        time.sleep(.100)
         message.send(self.sio,"FFFF")
+        time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -150,7 +152,9 @@ class Client:
     def sendNeighboorDisc(self):
         #while self.state == "CL":
         message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's??? (Micha)")
+        time.sleep(.100)
         message.send(self.sio,"FFFF")
+        time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -159,7 +163,9 @@ class Client:
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain! (Micha)")
+        time.sleep(.100)
         message.send(self.sio,"FFFF")
+        time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -169,6 +175,9 @@ class Client:
         #while self.state == "NEW":
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job! (Micha)")
         message.send(self.sio,"FFFF")
+        time.sleep(.100)
+        message.send(self.sio,"FFFF")
+        time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -177,7 +186,11 @@ class Client:
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
         message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job! (Micha)")
+        #message.send(self.sio,"FFFF")
+        time.sleep(.100)
         message.send(self.sio,"FFFF")
+        time.sleep(.100)
+        #message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -190,7 +203,12 @@ class Client:
         #0x0000 0x was cut for a better use
         newAdress = generatedAdress.replace("0x","",1).upper() 
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
+        time.sleep(.100)
         message.send(self.sio,requestAddress)
+        time.sleep(.100)
+  #      message.send(self.sio,"FFFF")
+ #       time.sleep(.300)
+#        message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -200,7 +218,9 @@ class Client:
         if int(forwardMessage.ttl) > 1:
             forwardMessage.hops = int(forwardMessage.hops) + 1
             forwardMessage.ttl = int(forwardMessage.ttl) - 1
+            time.sleep(.100)
             forwardMessage.send(self.sio,"FFFF")
+            time.sleep(.100)
             if not self.messageInStore(forwardMessage):
                 #self.appendToMessageStore(forwardMessage.getMessage())
                 self.appendToMessageStore(forwardMessage)
@@ -223,7 +243,7 @@ class Client:
     def sendCommand(self,command):
         self.sio.write(command + '\r\n')
         self.sio.flush()
-        self.sio.readline()
+        #self.sio.readline()
         time.sleep(0.2)
     
     def generateNewAddress(self):
@@ -277,7 +297,7 @@ class Client:
                 #print("MESSAGE"+str(i)+" IM STORE")
                 inStoreBool = True
             if timeN - m[1] > 10:
-                print("remove Message -> : "+m[0].msgID)
+                #print("remove Message -> : "+m[0].msgID)
                 self.messageStore.remove(m)
             if inStoreBool:
                 return inStoreBool
