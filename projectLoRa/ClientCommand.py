@@ -6,10 +6,11 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
-ser.timeout = 0.1
+ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+ser.timeout = 1
 ser.baudrate = 115200
+
 
 #unbedingt implementieren .... das sorgt dafür den BufferVernünftig zu Managen
 #ser.inWaitung()
@@ -20,7 +21,7 @@ message = []
 if(not ser.isOpen()):
     ser.open()
 
-sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))
+sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))#BufferedRWPair(ser,ser))
 
 client = client.Client("NEW",ser,"",[])
 
@@ -31,19 +32,20 @@ def readSerialLine():
     global read
     global message
     while 1:
-        #if ser.isWaiting() > 4:
-        #Dann erst ReadLine
-        #
         if ser.inWaiting():
             read = sio.readline()
             #if read != "":
             print(read)
             tempMessage = read.split(',')
-            if len(tempMessage) == 10:
+            if len(tempMessage) > 5:
                 message = tempMessage
-                client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],message[9])
-                checkMessageType(client.messageObj)
-                client.messageStore.append(client.messageObj.getMessage())
+                client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],",".join(message[9:]))
+                if not client.messageInStore(client.messageObj):
+                    checkMessageType(client.messageObj)
+                    client.appendToMessageStore(client.messageObj)#client.messageObj.getMessage())
+                else:
+                    print("##### MESSAGE IGNORE #########")
+                    print(read+" EXIST")
             if len(tempMessage) > 10:
                 pass#break
                 
@@ -58,28 +60,28 @@ def checkForAction():
     if not client.coordinatorAliv and client.state == "NEW" and client.configured:
         #if client.cdis <= 3 and client.configured:
         #print("ich will --> cdis == "+str(client.cdis))
-        if client.cdis == 10:
+        if client.cdis == 12:
             print("cdis = "+str(client.cdis))
             client.state = "COOR"
             client.setAddrModul("0000")
-            #client.sendAlive()
+            client.sendAlive()
             return
         else:
             timeN = time.time()
             actualDelta = timeN - client.deltaTime
             #print("DELTATIME --> " +str(actualDelta))
-            
-            if actualDelta > 5:
+            if actualDelta > 1:
                 client.deltaTime = time.time()
                 client.adrDiscovery()
     if(client.state == "COOR"):
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 60:
+        if actualDelta > 10:
             client.deltaTime = time.time()
             client.sendAlive()
             print(client.messageStore)
+            
     if(client.state == "CL"):
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
@@ -205,6 +207,7 @@ def checkMessageType(message):
     ##  HandleNetworkReset
     ######
     if message.type == "NRST":
+        client.sendForwardMessage(message)
         client.config()
         
     if message.type == "DISC":
@@ -216,16 +219,9 @@ def checkMessageType(message):
         print(str(client.nb))
     
     if message.type == "MSSG":
-        #if client.state == "CL" or client.state == "COOR":
-        client.sendForwardMessage(message)
-        
-  
-        
-   
-    
+        if client.state == "CL" or client.state == "COOR":
+            client.sendForwardMessage(message)
 
-#while client.state == "NEW":
-#    client.adrDiscovery(3)
 
 start_new_thread(readSerialLine,())
 

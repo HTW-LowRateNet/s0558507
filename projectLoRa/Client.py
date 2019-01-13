@@ -15,7 +15,7 @@ class Client:
         #messageQueue
         self.messageStore = []
         self.messageObj = m.Message("type","msgID","ttl","hops","srcAddr","destAddr","msg")
- 
+        #self.messageTupel = (self.messageObj,time.time())
         self.coordinatorAddrCounter = 256 #is a counter for the adress generator this is an integer
         #coordinatorAddrStore.append(WERT)
         self.coordinatorAddrStore = []
@@ -107,13 +107,14 @@ class Client:
         #self.sendCommand(addrCMD)
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
         self.addr = newAddr
+        time.sleep(0.1)
         
         
     def setAddr(self):
@@ -142,53 +143,67 @@ class Client:
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
         message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's??? (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
         message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job! (Micha)")
         message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
     
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
         #while self.state == "COOR":
-        generatedAdress = str(self.generateNewAddress())
+        generatedAdress = self.generateNewAddress()
         #0x0000 0x was cut for a better use
         newAdress = generatedAdress.replace("0x","",1).upper() 
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
         message.send(self.sio,requestAddress)
         print("Sended Message -> "+message.getMessage())
-        self.appendToMessageStore(message.getMessage())
+        if not self.messageInStore(message):
+            #self.appendToMessageStore(message.getMessage())
+            self.appendToMessageStore(message)
 
     def sendForwardMessage(self, forwardMessage):
         if int(forwardMessage.ttl) > 1:
             forwardMessage.hops = int(forwardMessage.hops) + 1
             forwardMessage.ttl = int(forwardMessage.ttl) - 1
             forwardMessage.send(self.sio,"FFFF")
-            self.appendToMessageStore(forwardMessage.getMessage())
+            if not self.messageInStore(forwardMessage):
+                #self.appendToMessageStore(forwardMessage.getMessage())
+                self.appendToMessageStore(forwardMessage)
             return
     
     #need to run an dummy 
@@ -213,8 +228,8 @@ class Client:
     
     def generateNewAddress(self):
         #self.coordinatorAddrCounter = self.coordinatorAddrCounter + 1
-        newAddress = hex(self.coordinatorAddrCounter+1)
-        return newAddress
+        newAddress = str(hex(self.coordinatorAddrCounter+1)).replace("0x","",1).upper()
+        return newAddress.upper().zfill(4)
         
     def setupCoordinator(self):
         self.state = "COOR"
@@ -241,9 +256,29 @@ class Client:
         return str(random.randint(0,999999))
     
     def appendToMessageStore(self,message):
-        self.messageStore.append(message)
+        messageTupel = (message,time.time())
+        self.messageStore.append(messageTupel)
         
     def sendMSSG(self,text):
         newtext = text + " (Micha)"
         message = m.Message("MSSG",self.uniqueMID(),"100","0",self.addr,"FFFF",newtext)
         message.send(self.sio,"FFFF")
+        self.appendToMessageStore(message)
+        
+    def messageInStore(self,message):
+        inStoreBool = False
+        timeN = time.time()
+        #print("########################### WILL LOESCHEN ##############################")
+        i=0
+        for m in self.messageStore:
+            i=i+1
+            #print("PRUEFE MESSAGE"+str(i))
+            if message.msgID == m[0].msgID:
+                #print("MESSAGE"+str(i)+" IM STORE")
+                inStoreBool = True
+            if timeN - m[1] > 10:
+                print("remove Message -> : "+m[0].msgID)
+                self.messageStore.remove(m)
+            if inStoreBool:
+                return inStoreBool
+        return inStoreBool

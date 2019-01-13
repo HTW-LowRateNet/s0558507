@@ -20,7 +20,7 @@ class Message:
     
     # this message Pattern was given by the team
     def getMessage(self):
-        string = self.type + "," + self.mID + "," + self.ttl + "," + self.hops + "," + self.srcAddr + "," + self.dstAddr + "," + self.msg + ","
+        string = self.type + "," + self.mID + "," + self.ttl + "," + self.hops + "," + self.srcAddr + "," + self.dstAddr + "," + self.msg
         return string
     
     # send Message ... source is the getMessage
@@ -50,7 +50,7 @@ class Message:
         return str(size)
            
     def getMessage(self):
-        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)+","
+        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)
         return string
     
     def send(self,sio,dest):
@@ -58,5 +58,9 @@ class Message:
         size = self.messageSize()
         sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
-        time.sleep(1)
+        time.sleep(0.2)
+        #if sio.writable:
+        #while not sio.writable:
         sio.write(self.getMessage())
+        sio.flush
+        time.sleep(0.2)
