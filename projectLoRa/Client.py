@@ -126,7 +126,7 @@ class Client:
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
             message = m.Message("ADDR","0","0","0",self.addr,"0","")
-            print(message.toString)
+            print(message.getMessage)
             #tempAddr = "300"
         self.addr = tempAddr
         self.sio.write('AT+ADDR='+tempAddr+'\r\n')

@@ -219,7 +219,7 @@ def checkMessageType(message):
         for i in client.nb:
             if i != str(message.srcAddr): 
                 client.nb.append(str(message.srcAddr))
-                nb.sort()
+                client.nb.sort()
                 break
         print(str(client.nb))
     
