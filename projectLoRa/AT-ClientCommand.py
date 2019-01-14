@@ -8,7 +8,8 @@ from _thread import start_new_thread
 
 #ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
 ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
-ser.timeout = 0.3
+ser.timeout = 0.5
+ser.write_timeout = 0.5
 ser.baudrate = 115200
 
 
@@ -32,30 +33,32 @@ def readSerialLine():
     global read
     global message
     while 1:
-        if ser.inWaiting():
-            read = sio.readline()
-            #if read != "":
-            print(read)
-            tempMessage = read.split(',')
-            if len(tempMessage) > 8:
-                message = tempMessage
-                client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],",".join(message[9:]))
-                if not client.messageInStore(client.messageObj):
-                    checkMessageType(client.messageObj)
-                    client.appendToMessageStore(client.messageObj)#client.messageObj.getMessage())
-                else:
-                    print("##### MESSAGE IGNORE #########")
-                    print(read+" EXIST")
-            if len(tempMessage) > 10:
-                pass#break
-                
-        #print("STATE = "+client.state)
-        #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
-        if client.configured:
-            checkForAction()
-        ser.flush()
-        #ser.reset_input_buffer()
-        #ser.flush()#reset_input_buffer()        
+        if ser.out_waiting < 1:
+            if ser.in_waiting > 0:
+                read = sio.readline()
+                #if read != "":
+                print(read)
+                tempMessage = read.split(',')
+                if len(tempMessage) > 8:
+                    message = tempMessage
+                    client.messageObj = Message.Message(message[3],message[4],message[5],message[6],message[7],message[8],",".join(message[9:]))
+                    if not client.messageInStore(client.messageObj):
+                        checkMessageType(client.messageObj)
+                        client.appendToMessageStore(client.messageObj)#client.messageObj.getMessage())
+                    else:
+                        print("##### MESSAGE IGNORE #########")
+                        print(read+" EXIST")
+                if len(tempMessage) > 10:
+                    pass#break
+                    
+            #print("STATE = "+client.state)
+            #koennte besser sein hier ebenfalls mit entsprechender Zeit einschrnkung zu arbeiten damit gebe ich allgemein den Takt fuer alle Aktionen auf dem Geraet an welches sich entsprechend besser handlen laesst
+            if client.configured:
+                checkForAction()
+            #ser.flush()
+            #ser.reset_input_buffer()
+            #ser.reset_output_buffer()
+        
                               
                 
 def checkForAction():
@@ -140,8 +143,10 @@ def checkMessageType(message):
             client.state = "CL"
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
-            client.setAddrModul(str(message.msg).upper().zfill(4))
-            time.sleep(.100)
+            time.sleep(.200)
+            client.setAddrModul(message.msg)#.upper.zfill(4))
+            time.sleep(.200)
+            #ser.reset_
             client.sendAddrAckknowledge()
             print("MY NEW ADDR = "+client.addr)
             #######  ignore   #########
@@ -165,13 +170,13 @@ def checkMessageType(message):
     ####################
     ####    HANDLE MESSAGE TYPE ADDR
     ###################
-    if message.type is "AACK":
+    if message.type == "AACK":
         print("####################### ADDR REQUEST ACKNOWLEDGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
             #save the new adress and send it to the client
             client.coordinatorAddrCounter = client.coordinatorAddrCounter + 1
-            aackAddr = str(message.srcAddr)
+            aackAddr = str(message.srcAddr).upper().zfill(4)
             client.coordinatorAddrStore.append(aackAddr)
             print("ADDRESSSTORE --> "+str(client.coordinatorAddrStore))
             #client.sendAddrResponse(message.srcAddr)

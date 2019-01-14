@@ -107,30 +107,32 @@ class Client:
         #self.sendCommand(addrCMD)
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(.100)
+        #time.sleep(.100)
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
-        time.sleep(.100)
+        #time.sleep(.100)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        self.addr = newAddr
-        time.sleep(0.400)
+        self.addr = str(newAddr).upper().zfill(4)
+        time.sleep(0.200)
         
         
     def setAddr(self):
         tempAddr = ""
         if self.state == "NEW":
-            tempAddr = str(random.randint(16,100))           
+            tempAddr = str(hex(random.randint(16,4095))).replace("0x","",1).upper().zfill(4)
         if self.state == "COOR":
             tempAddr = "0000"
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
-            message = m.Message("ADDR","0","0","0",self.addr,"0","")
-            print(message.toString)
+            #message = m.Message("ADDR","0","0","0",self.addr,"0000","")
+            #print(message.toString)
             #tempAddr = "300"
+            pass
         self.addr = tempAddr
-        self.sio.write('AT+ADDR='+tempAddr+'\r\n')
-        self.sio.flush()
+        #self.sio.write('AT+ADDR='+tempAddr+'\r\n')
+        #self.sio.flush()
+        self.setAddrModul(tempAddr)
         print("Own Address is set to: "+self.addr)
     
       
@@ -140,10 +142,10 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
-        message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","I am the captian! (Micha)")
-        time.sleep(.100)
+        message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -151,10 +153,10 @@ class Client:
             
     def sendNeighboorDisc(self):
         #while self.state == "CL":
-        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","NeighBROO's??? (Micha)")
-        time.sleep(.100)
+        message = m.Message("DISC",self.uniqueMID(),"1","0",self.addr,"FFFF","Micha")
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -162,10 +164,10 @@ class Client:
             
     def sendCoordinatorDisc(self):
         #while self.state == "NEW":
-        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","where is my captain! (Micha)")
-        time.sleep(.100)
+        message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -173,11 +175,11 @@ class Client:
             
     def sendAddrRequest(self):
         #while self.state == "NEW":
-        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","captain give me a job! (Micha)")
+        message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
@@ -185,11 +187,11 @@ class Client:
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
-        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","captain thanks for the job! (Micha)")
+        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
         #message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.100)
+        #time.sleep(.100)
         #message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
         if not self.messageInStore(message):
@@ -296,7 +298,7 @@ class Client:
             if message.msgID == m[0].msgID:
                 #print("MESSAGE"+str(i)+" IM STORE")
                 inStoreBool = True
-            if timeN - m[1] > 10:
+            if timeN - m[1] > 100:
                 #print("remove Message -> : "+m[0].msgID)
                 self.messageStore.remove(m)
             if inStoreBool:

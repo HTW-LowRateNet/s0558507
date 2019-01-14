@@ -54,13 +54,15 @@ class Message:
         return string
     
     def send(self,sio,dest):
-        time.sleep(1)
+        
         size = self.messageSize()
         sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
         time.sleep(.100)
+        #time.sleep(.100)
         #if sio.writable:
         #while not sio.writable:
+        self.srcAddr = self.srcAddr.upper().zfill(4)
         sio.write(self.getMessage())
         sio.flush
         time.sleep(.100)
