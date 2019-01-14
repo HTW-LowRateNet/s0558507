@@ -125,9 +125,13 @@ class Client:
             tempAddr = "0000"
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
+<<<<<<< HEAD
             #message = m.Message("ADDR","0","0","0",self.addr,"0000","")
-            print(message.getMessage)
             #print(message.toString)
+=======
+            message = m.Message("ADDR","0","0","0",self.addr,"0","")
+            print(message.getMessage)
+>>>>>>> ff1173e043c4f9e717f96d0cf0bad107bbd1d7d1
             #tempAddr = "300"
             pass
         self.addr = tempAddr
