@@ -50,7 +50,7 @@ class Message:
         return str(size)
            
     def getMessage(self):
-        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)
+        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)+"\r\n"
         return string
     
     def send(self,sio,dest):
