@@ -16,8 +16,7 @@ class Client:
         self.messageStore = []
         self.messageObj = m.Message("type","msgID","ttl","hops","srcAddr","destAddr","msg")
         #self.messageTupel = (self.messageObj,time.time())
-        self.coordinatorAddrCounter = 4096 #is a counter for the adress generator this is an integer
-
+        self.coordinatorAddrCounter = 256 #is a counter for the adress generator this is an integer
         #coordinatorAddrStore.append(WERT)
         self.coordinatorAddrStore = []
         #coordinatorAddrStore.append(256)
@@ -106,18 +105,15 @@ class Client:
     def setAddrModul(self,newAddr):
         #addrCMD = "AT+ADDR="+addr+"\r\n"
         #self.sendCommand(addrCMD)
-
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(.500)
-
+        #time.sleep(.100)
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
         #time.sleep(.100)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        newAddr = str(newAddr).upper().zfill(4)
-        self.addr = newAddr[0:4]
+        self.addr = str(newAddr).upper().zfill(4)
         time.sleep(0.200)
         
         
@@ -129,9 +125,13 @@ class Client:
             tempAddr = "0000"
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
+<<<<<<< HEAD
             #message = m.Message("ADDR","0","0","0",self.addr,"0000","")
-            #print(message.getMessage)
             #print(message.toString)
+=======
+            message = m.Message("ADDR","0","0","0",self.addr,"0","")
+            print(message.getMessage)
+>>>>>>> ff1173e043c4f9e717f96d0cf0bad107bbd1d7d1
             #tempAddr = "300"
             pass
         self.addr = tempAddr
@@ -147,14 +147,11 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
-
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
         #time.sleep(.100)
-
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -166,7 +163,6 @@ class Client:
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -175,11 +171,9 @@ class Client:
         #while self.state == "NEW":
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
         #time.sleep(.100)
-
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -187,28 +181,24 @@ class Client:
     def sendAddrRequest(self):
         #while self.state == "NEW":
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
-
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
-        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr[0:4],"0000","Micha")
+        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
         #message.send(self.sio,"FFFF")
-        time.sleep(.200)
-
+        #time.sleep(.100)
         message.send(self.sio,"FFFF")
-        time.sleep(.200)
+        #time.sleep(.100)
         #message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -216,31 +206,27 @@ class Client:
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
         #while self.state == "COOR":
-
         generatedAdress = self.generateNewAddress()
-
         #0x0000 0x was cut for a better use
-        newAdress = generatedAdress#.replace("0x","",1).upper() 
+        newAdress = generatedAdress.replace("0x","",1).upper() 
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
         time.sleep(.100)
         message.send(self.sio,requestAddress)
         time.sleep(.100)
-
+  #      message.send(self.sio,"FFFF")
+ #       time.sleep(.300)
+#        message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
-
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
 
     def sendForwardMessage(self, forwardMessage):
         if int(forwardMessage.ttl) > 1:
-            time.sleep(0.01)
             forwardMessage.hops = int(forwardMessage.hops) + 1
-            #forwardMessage.ttl = int(forwardMessage.ttl) - 1
-            print("################### FORWARD MESSAGE -> "+forwardMessage.getMessage())
+            forwardMessage.ttl = int(forwardMessage.ttl) - 1
             time.sleep(.100)
             forwardMessage.send(self.sio,"FFFF")
-
             time.sleep(.100)
             if not self.messageInStore(forwardMessage):
                 #self.appendToMessageStore(forwardMessage.getMessage())
@@ -252,9 +238,9 @@ class Client:
         #while i==0:
         print("!!!!!!!!!!CDIS AUFRUF!!!!!!!!!")
         print("Address Discovery..")
-        time.sleep(.100)
+        time.sleep(0.1)
         self.sendCoordinatorDisc()
-        time.sleep(.100)
+        time.sleep(0.1)
         if self.coordinatorAliv:
             return
         self.cdis = self.cdis + 1
@@ -265,18 +251,18 @@ class Client:
         self.sio.write(command + '\r\n')
         self.sio.flush()
         #self.sio.readline()
-        time.sleep(.200)
+        time.sleep(0.2)
     
     def generateNewAddress(self):
         #self.coordinatorAddrCounter = self.coordinatorAddrCounter + 1
-        newAddress = str(hex(self.coordinatorAddrCounter+1)).replace("0x","",1)
+        newAddress = str(hex(self.coordinatorAddrCounter+1)).replace("0x","",1).upper()
         return newAddress.upper().zfill(4)
         
     def setupCoordinator(self):
         self.state = "COOR"
         self.cdis = 0
         self.coordinatorAliv = True
-        self.setAddrModul("0000")
+        self.setAddr()
     
     def resetCoordinator(self):
         #for i in xrange(3):
@@ -294,15 +280,14 @@ class Client:
         #self.setAddr()
         
     def uniqueMID(self):
-        return str(random.randint(0,999999)).zfill(6)
+        return str(random.randint(0,999999))
     
-
     def appendToMessageStore(self,message):
         messageTupel = (message,time.time())
         self.messageStore.append(messageTupel)
         
     def sendMSSG(self,text):
-        newtext = text + "(Micha)"
+        newtext = text + " (Micha)"
         message = m.Message("MSSG",self.uniqueMID(),"100","0",self.addr,"FFFF",newtext)
         message.send(self.sio,"FFFF")
         self.appendToMessageStore(message)
@@ -324,4 +309,3 @@ class Client:
             if inStoreBool:
                 return inStoreBool
         return inStoreBool
-

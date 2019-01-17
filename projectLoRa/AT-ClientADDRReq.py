@@ -1,0 +1,48 @@
+import serial
+import io
+import time
+import random
+import Client as client
+import Message
+from _thread import start_new_thread
+
+ser = serial.Serial ("/dev/ttyUSB0")
+ser.timeout = 0.3
+ser.baudrate = 115200
+
+read = Message.Message("ADDR","0","0","0","0100","ffff","I am Not the captian!")
+sio = io.TextIOWrapper(io.BufferedRWPair(ser,ser))#BufferedRWPair(ser,ser))
+    #SEND ALIV AS KOORDINATOR STATE
+    
+def sendAlive(self):
+    while self.state == "COOR":
+        message = Message.Message("ALIV","0","0","0",self.addr,"ffff","I am the captian!")
+        message.send(self.sio,"ffff")
+        print("Meesge"+message.getMessage())
+        time.sleep(5)
+        
+def sendAddr(self):
+    while self.state == "COOR":
+        message = Message.Message("ALIV","0","0","0",self.addr,"ffff","I am the captian!")
+        message.send(self.sio,"0000")
+        print("Meesge"+message.getMessage())
+            
+test = client.Client("NEW",sio,"",[])
+test.config()
+#i= 3
+#while i>=0:
+#    test.adrDiscovery(read,i)
+#    print("not yet a captain but now?")
+#    if test.state != "NEW":
+#        break
+#    i=i-1
+ 
+def loop():
+    while 1:
+        #test.sendAlive()
+        #test.sendCoordinatorDisc()
+        test.sendAddrRequest()
+        read = sio.readline()
+            #if read != "":
+        print(read)
+start_new_thread(loop(),())

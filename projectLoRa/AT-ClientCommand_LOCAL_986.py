@@ -1,5 +1,4 @@
 import serial
-#from serial import Serial
 import io
 import time
 import random
@@ -14,7 +13,7 @@ ser.write_timeout = 0.5
 ser.baudrate = 115200
 
 
-#unbedingt implementieren .... das sorgt dafuer den BufferVernünftig zu Managen
+#unbedingt implementieren .... das sorgt dafür den BufferVernünftig zu Managen
 #ser.inWaitung()
 
 read = ""
@@ -149,13 +148,9 @@ def checkMessageType(message):
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             time.sleep(.200)
-<<<<<<< HEAD
             newAdress = message.msg
             newAdress = newAdress.replace("\r\n","")
             client.setAddrModul(newAdress)#.upper.zfill(4))
-=======
-            client.setAddrModul(message.msg.replace("\r\n",""))#.upper.zfill(4))
->>>>>>> 25beb3fe37c3cfa4de589424e13aba1a6435294e
             time.sleep(.200)
             #ser.reset_
             client.sendAddrAckknowledge()

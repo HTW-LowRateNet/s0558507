@@ -20,7 +20,7 @@ class Message:
     
     # this message Pattern was given by the team
     def getMessage(self):
-        string = self.type + "," + self.mID + "," + self.ttl + "," + self.hops + "," + self.srcAddr + "," + self.dstAddr + "," + self.msg + ","
+        string = self.type + "," + self.mID + "," + self.ttl + "," + self.hops + "," + self.srcAddr + "," + self.dstAddr + "," + self.msg
         return string
     
     # send Message ... source is the getMessage
@@ -50,13 +50,25 @@ class Message:
         return str(size)
            
     def getMessage(self):
-        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)+","
+        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)
         return string
     
     def send(self,sio,dest):
-        time.sleep(1)
+        
         size = self.messageSize()
         sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
-        time.sleep(1)
-        sio.write(self.getMessage())
+        time.sleep(.200)
+        #time.sleep(.100)
+        #if sio.writable:
+        #while not sio.writable:
+        self.srcAddr = self.srcAddr.upper().zfill(4)
+
+        sio.write(self.getMessage())#+"\r\n")
+        
+        #sio.write(self.getMessage()+'\r\n')
+
+        sio.flush
+        time.sleep(.200)
+        
+        #time.sleep(0.2)
