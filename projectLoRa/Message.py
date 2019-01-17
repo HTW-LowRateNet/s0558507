@@ -63,7 +63,11 @@ class Message:
         #if sio.writable:
         #while not sio.writable:
         self.srcAddr = self.srcAddr.upper().zfill(4)
+
         sio.write(self.getMessage())#+"\r\n")
+        
+        #sio.write(self.getMessage()+'\r\n')
+
         sio.flush
         time.sleep(.200)
         

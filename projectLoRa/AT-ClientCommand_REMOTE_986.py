@@ -1,4 +1,5 @@
 import serial
+#from serial import Serial
 import io
 import time
 import random
@@ -6,8 +7,8 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.5
 ser.write_timeout = 0.5
 ser.baudrate = 115200
@@ -84,7 +85,7 @@ def checkForAction():
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 5:
+        if actualDelta > 10:
             client.deltaTime = time.time()
             client.sendAlive()
             #print(client.messageStore)
@@ -148,10 +149,7 @@ def checkMessageType(message):
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             time.sleep(.200)
-            newAdress = message.msg
-            #newAdress = newAdress.replace("\r\n","")
-            client.setAddrModul(newAdress[0:4])#.upper.zfill(4))
-            #client.setAddrModul(message.msg.replace("\r\n",""))#.upper.zfill(4))
+            client.setAddrModul(message.msg.replace("\r\n",""))#.upper.zfill(4))
             time.sleep(.200)
             #ser.reset_
             client.sendAddrAckknowledge()

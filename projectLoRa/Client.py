@@ -105,9 +105,11 @@ class Client:
     def setAddrModul(self,newAddr):
         #addrCMD = "AT+ADDR="+addr+"\r\n"
         #self.sendCommand(addrCMD)
+
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        time.sleep(.900)
+        time.sleep(.500)
+
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
         #time.sleep(.100)
@@ -127,7 +129,7 @@ class Client:
         if self.state == "CL":
             #(type,msgID,ttl,hops,ownAddr,destAddr,msg):
             #message = m.Message("ADDR","0","0","0",self.addr,"0000","")
-            print(message.getMessage)
+            #print(message.getMessage)
             #print(message.toString)
             #tempAddr = "300"
             pass

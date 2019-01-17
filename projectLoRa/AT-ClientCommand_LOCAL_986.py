@@ -6,14 +6,14 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.5
 ser.write_timeout = 0.5
 ser.baudrate = 115200
 
 
-#unbedingt implementieren .... das sorgt dafuer den BufferVernünftig zu Managen
+#unbedingt implementieren .... das sorgt dafür den BufferVernünftig zu Managen
 #ser.inWaitung()
 
 read = ""
@@ -149,9 +149,8 @@ def checkMessageType(message):
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             time.sleep(.200)
             newAdress = message.msg
-            #newAdress = newAdress.replace("\r\n","")
-            client.setAddrModul(newAdress[0:4])#.upper.zfill(4))
-            #client.setAddrModul(message.msg.replace("\r\n",""))#.upper.zfill(4))
+            newAdress = newAdress.replace("\r\n","")
+            client.setAddrModul(newAdress)#.upper.zfill(4))
             time.sleep(.200)
             #ser.reset_
             client.sendAddrAckknowledge()
