@@ -107,13 +107,14 @@ class Client:
         #self.sendCommand(addrCMD)
         self.sio.write('AT+RST\r\n')
         self.sio.flush()
-        #time.sleep(.100)
+        time.sleep(.900)
         self.sio.write('AT+ADDR='+newAddr+'\r\n')
         self.sio.flush()
         #time.sleep(.100)
         self.sio.write('AT+SAVE\r\n')
         self.sio.flush()
-        self.addr = str(newAddr).upper().zfill(4)
+        newAddr = str(newAddr).upper().zfill(4)
+        self.addr = newAddr[0:4]
         time.sleep(0.200)
         
         
@@ -188,7 +189,7 @@ class Client:
         
     def sendAddrAckknowledge(self):
         #while self.state == "NEW":
-        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
+        message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr[0:4],"0000","Micha")
         #message.send(self.sio,"FFFF")
         time.sleep(.200)
         message.send(self.sio,"FFFF")
@@ -277,7 +278,7 @@ class Client:
         #self.setAddr()
         
     def uniqueMID(self):
-        return str(random.randint(0,999999))
+        return str(random.randint(0,999999)).zfill(6)
     
     def appendToMessageStore(self,message):
         messageTupel = (message,time.time())

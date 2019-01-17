@@ -84,7 +84,7 @@ def checkForAction():
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 10:
+        if actualDelta > 5:
             client.deltaTime = time.time()
             client.sendAlive()
             #print(client.messageStore)
@@ -148,7 +148,9 @@ def checkMessageType(message):
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             time.sleep(.200)
-            client.setAddrModul(message.msg.replace("\n",""))#.upper.zfill(4))
+            newAdress = message.msg
+            #newAdress = newAdress.replace("\r\n","")
+            client.setAddrModul(newAdress[0:4])#.upper.zfill(4))
             time.sleep(.200)
             #ser.reset_
             client.sendAddrAckknowledge()

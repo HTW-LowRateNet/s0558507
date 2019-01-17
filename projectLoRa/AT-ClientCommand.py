@@ -6,8 +6,8 @@ import Client as client
 import Message
 from _thread import start_new_thread
 
-#ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
-ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
+#ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
 ser.timeout = 0.5
 ser.write_timeout = 0.5
 ser.baudrate = 115200
@@ -36,6 +36,7 @@ def readSerialLine():
         if ser.out_waiting < 1:
             if ser.in_waiting > 0:
                 read = sio.readline()
+                time.sleep(.100)
                 #if read != "":
                 print(read)
                 tempMessage = read.split(',')
@@ -67,8 +68,9 @@ def checkForAction():
         #print("ich will --> cdis == "+str(client.cdis))
         if client.cdis == 12:
             print("cdis = "+str(client.cdis))
-            client.state = "COOR"
-            client.setAddrModul("0000")
+            #client.state = "COOR"
+            #client.setAddrModul("0000")
+            client.setupCoordinator()
             client.sendAlive()
             return
         else:
@@ -82,20 +84,22 @@ def checkForAction():
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
-        if actualDelta > 10:
+        if actualDelta > 5:
             client.deltaTime = time.time()
             client.sendAlive()
             #print(client.messageStore)
             
     if(client.state == "CL"):
+        pass
+        '''
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         if actualDelta > 20:
             client.deltaTime = time.time()
-            client.sendNeighboorDisc()
-            print(client.messageStore)
+            #client.sendNeighboorDisc()
+            #print(client.messageStore)
      #   return
-
+        '''
 
 def checkMessageType(message):
     ####################
@@ -144,7 +148,9 @@ def checkMessageType(message):
             print("MyState is actually = "+client.state)
             print("I will set me a new Address from --> "+client.addr+" --> to --> "+message.msg)
             time.sleep(.200)
-            client.setAddrModul(message.msg)#.upper.zfill(4))
+            newAdress = message.msg
+            newAdress = newAdress.replace("\r\n","")
+            client.setAddrModul(newAdress)#.upper.zfill(4))
             time.sleep(.200)
             #ser.reset_
             client.sendAddrAckknowledge()
@@ -181,12 +187,6 @@ def checkMessageType(message):
             print("ADDRESSSTORE --> "+str(client.coordinatorAddrStore))
             #client.sendAddrResponse(message.srcAddr)
             return
-        
-        #IGNORE FOR STATE NEW !!!!!! KISS
-        #if(client.state == "NEW"):
-            #print("MyState is actually = "+client.state)
-            #######  ignore   #########
-            # IAM in STATE NEW not AUTORIZED TO FORWARD MESSAGES!!!!
         if(client.state == "CL"):
             client.sendForwardMessage(message)
             return
@@ -223,15 +223,18 @@ def checkMessageType(message):
         for i in client.nb:
             if i != str(message.srcAddr): 
                 client.nb.append(str(message.srcAddr))
-                nb.sort()
+                client.nb.sort()
                 break
         print(str(client.nb))
+        client.sendForwardMessage(message)
     
     if message.type == "MSSG":
         print("####################### MSSG MESSAGE")
-        if client.state == "CL" or client.state == "COOR":
+        if client.state == "CL":
             client.sendForwardMessage(message)
-
+        if client.state == "COOR":
+            client.sendForwardMessage(message)
+        
 
 start_new_thread(readSerialLine,())
 

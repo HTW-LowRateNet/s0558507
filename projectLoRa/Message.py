@@ -50,7 +50,7 @@ class Message:
         return str(size)
            
     def getMessage(self):
-        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)+"\r\n"
+        string = str(self.type)+","+str(self.msgID)+","+str(self.ttl)+","+str(self.hops)+","+str(self.srcAddr)+","+str(self.destAddr)+","+str(self.msg)
         return string
     
     def send(self,sio,dest):
@@ -58,13 +58,13 @@ class Message:
         size = self.messageSize()
         sio.write('AT+SEND='+size+'\r\n')
         sio.flush()
-        time.sleep(.100)
+        time.sleep(.200)
         #time.sleep(.100)
         #if sio.writable:
         #while not sio.writable:
         self.srcAddr = self.srcAddr.upper().zfill(4)
-        sio.write(self.getMessage())
+        sio.write(self.getMessage())#+"\r\n")
         sio.flush
-        time.sleep(.100)
+        time.sleep(.200)
         
         #time.sleep(0.2)
