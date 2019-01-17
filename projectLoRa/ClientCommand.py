@@ -8,6 +8,7 @@ from _thread import start_new_thread
 
 #ser = serial.Serial ("/dev/ttyUSB1")#Open named port)
 ser = serial.Serial ("/dev/ttyUSB0")#Open named port)
+
 ser.timeout = 0.5
 ser.write_timeout = 0.5
 ser.baudrate = 115200
@@ -33,6 +34,7 @@ def readSerialLine():
     global read
     global message
     while 1:
+
         if ser.out_waiting < 1:
             if ser.in_waiting > 0:
                 read = sio.readline()
@@ -66,6 +68,7 @@ def checkForAction():
     if not client.coordinatorAliv and client.state == "NEW" and client.configured:
         #if client.cdis <= 3 and client.configured:
         #print("ich will --> cdis == "+str(client.cdis))
+
         if client.cdis == 12:
             print("cdis = "+str(client.cdis))
             #client.state = "COOR"
@@ -84,6 +87,7 @@ def checkForAction():
         timeN = time.time()
         actualDelta = timeN - client.deltaTime
         #print("DELTATIME --> " +str(actualDelta))
+
         if actualDelta > 5:
             client.deltaTime = time.time()
             client.sendAlive()
@@ -96,12 +100,13 @@ def checkForAction():
         actualDelta = timeN - client.deltaTime
         if actualDelta > 20:
             client.deltaTime = time.time()
+
             #client.sendNeighboorDisc()
             #print(client.messageStore)
      #   return
         '''
-
 def checkMessageType(message):
+    
     ####################
     ####    HANDLE MESSAGE TYPE ALIV
     ###################
@@ -113,6 +118,7 @@ def checkMessageType(message):
         client.cdis = 0
         # two coordinatorers eventually split action from check message to action use semaphores
         if(client.state == "COOR"):
+            #if checkMessageInStore(message) == False:
             client.resetCoordinator()
             #client.state = "NEW"
             #client.setAddr()
@@ -120,6 +126,7 @@ def checkMessageType(message):
             return
         if(client.state == "NEW"):
             ### SEND ADDR !!!!!
+            #if checkMessageInStore(message) == False:
             client.sendAddrRequest()
             ### SEND CDIS !!!!!
             #client.sendCoordinatorDisc()
@@ -130,6 +137,7 @@ def checkMessageType(message):
             ## FORWARD ALIV MESSAAGE
             client.state = "CL"
             print("MyState is actually = "+client.state)
+            #if not checkMessageInStore(message):
             client.sendForwardMessage(message)
             return
             
@@ -140,6 +148,7 @@ def checkMessageType(message):
         print("####################### ADDR REQUEST OR RESPONSE MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
+            #if checkMessageInStore(message) == False:
             client.sendAddrResponse(message.srcAddr)
             return
         if(client.state == "NEW" and message.destAddr == client.addr):
@@ -171,6 +180,7 @@ def checkMessageType(message):
         if(client.state == "CL"):
             #ignore
             print("MyState is actually = "+client.state)
+            #if not checkMessageInStore(message):
             client.sendForwardMessage(message)
             return
                 
@@ -189,6 +199,7 @@ def checkMessageType(message):
             #client.sendAddrResponse(message.srcAddr)
             return
         if(client.state == "CL"):
+            #if checkMessageInStore(message) == False:
             client.sendForwardMessage(message)
             return
     
@@ -200,6 +211,7 @@ def checkMessageType(message):
         print("####################### CDIS REQUEST MESSAGE")
         if(client.state == "COOR"):
             print("MyState is actually = "+client.state)
+            #if checkMessageInStore(message) == False:
             client.sendAlive()
             return
         ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
@@ -210,6 +222,7 @@ def checkMessageType(message):
             ## NEW STATE NOT ALLOWED TO FORWARD MESSAGES
          #   return
         if(client.state == "CL"):
+            #if checkMessageInStore(message) == False:
             client.sendForwardMessage(message)
             return
     #####

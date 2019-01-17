@@ -17,6 +17,7 @@ class Client:
         self.messageObj = m.Message("type","msgID","ttl","hops","srcAddr","destAddr","msg")
         #self.messageTupel = (self.messageObj,time.time())
         self.coordinatorAddrCounter = 4096 #is a counter for the adress generator this is an integer
+
         #coordinatorAddrStore.append(WERT)
         self.coordinatorAddrStore = []
         #coordinatorAddrStore.append(256)
@@ -146,11 +147,14 @@ class Client:
     #eventually the while must be droped
     def sendAlive(self):
         #while self.state == "COOR":
+
         message = m.Message("ALIV",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
         #time.sleep(.100)
+
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -162,6 +166,7 @@ class Client:
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -170,9 +175,11 @@ class Client:
         #while self.state == "NEW":
         message = m.Message("CDIS",self.uniqueMID(),"100","0",self.addr,"FFFF","Micha")
         #time.sleep(.100)
+
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -180,11 +187,13 @@ class Client:
     def sendAddrRequest(self):
         #while self.state == "NEW":
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,"0000","Micha")
+
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         message.send(self.sio,"FFFF")
         #time.sleep(.100)
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -194,10 +203,12 @@ class Client:
         message = m.Message("AACK",self.uniqueMID(),"10","0",self.addr[0:4],"0000","Micha")
         #message.send(self.sio,"FFFF")
         time.sleep(.200)
+
         message.send(self.sio,"FFFF")
         time.sleep(.200)
         #message.send(self.sio,"FFFF")
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
@@ -205,28 +216,31 @@ class Client:
     #this message is the only one of controlmessages that recieve an payload 
     def sendAddrResponse(self,requestAddress):
         #while self.state == "COOR":
+
         generatedAdress = self.generateNewAddress()
+
         #0x0000 0x was cut for a better use
         newAdress = generatedAdress#.replace("0x","",1).upper() 
         message = m.Message("ADDR",self.uniqueMID(),"10","0",self.addr,requestAddress,newAdress)
         time.sleep(.100)
         message.send(self.sio,requestAddress)
         time.sleep(.100)
-  #      message.send(self.sio,"FFFF")
- #       time.sleep(.300)
-#        message.send(self.sio,"FFFF")
+
         print("Sended Message -> "+message.getMessage())
+
         if not self.messageInStore(message):
             #self.appendToMessageStore(message.getMessage())
             self.appendToMessageStore(message)
 
     def sendForwardMessage(self, forwardMessage):
         if int(forwardMessage.ttl) > 1:
+            time.sleep(0.01)
             forwardMessage.hops = int(forwardMessage.hops) + 1
             #forwardMessage.ttl = int(forwardMessage.ttl) - 1
             print("################### FORWARD MESSAGE -> "+forwardMessage.getMessage())
             time.sleep(.100)
             forwardMessage.send(self.sio,"FFFF")
+
             time.sleep(.100)
             if not self.messageInStore(forwardMessage):
                 #self.appendToMessageStore(forwardMessage.getMessage())
@@ -282,6 +296,7 @@ class Client:
     def uniqueMID(self):
         return str(random.randint(0,999999)).zfill(6)
     
+
     def appendToMessageStore(self,message):
         messageTupel = (message,time.time())
         self.messageStore.append(messageTupel)
@@ -309,3 +324,4 @@ class Client:
             if inStoreBool:
                 return inStoreBool
         return inStoreBool
+
